@@ -1,0 +1,11 @@
+﻿  Renderer.cpp
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(31,1): warning C4273: 'Renderer::InitRenderer': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(26,24): message : see previous definition of 'InitRenderer'
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(70,1): warning C4273: 'Renderer::RenderLoop': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(28,24): message : see previous definition of 'RenderLoop'
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(160,1): warning C4273: 'Renderer::CreateRenderWindow': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(27,24): message : see previous definition of 'CreateRenderWindow'
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(186,1): warning C4273: 'Renderer::SDLInput': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(30,24): message : see previous definition of 'SDLInput'
+     Creating library C:\Users\Owner\source\repos\Aurora Engine\x64\Debug\engine.lib and object C:\Users\Owner\source\repos\Aurora Engine\x64\Debug\engine.exp
+  engine.vcxproj -> C:\Users\Owner\source\repos\Aurora Engine\x64\Debug\engine.dll
