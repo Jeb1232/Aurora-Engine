@@ -1,11 +1,23 @@
-﻿  Renderer.cpp
+﻿  compilation object save succeeded; see C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\pixelShader.cso
+  compilation object save succeeded; see C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\vertexShader.cso
+  AudioSource.cpp
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\audio\AudioSource.cpp(4,1): warning C4273: 'AudioSource::AudioSource': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\audio\AudioSource.h(15,2): message : see previous definition of '{ctor}'
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\audio\AudioSource.cpp(47,1): warning C4273: 'AudioSource::~AudioSource': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\audio\AudioSource.h(16,20): message : see previous definition of '{dtor}'
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\audio\AudioSource.cpp(55,1): warning C4273: 'AudioSource::play': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\audio\AudioSource.h(17,24): message : see previous definition of 'play'
+  Renderer.cpp
 C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(31,1): warning C4273: 'Renderer::InitRenderer': inconsistent dll linkage
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(26,24): message : see previous definition of 'InitRenderer'
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(70,1): warning C4273: 'Renderer::RenderLoop': inconsistent dll linkage
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(28,24): message : see previous definition of 'RenderLoop'
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(160,1): warning C4273: 'Renderer::CreateRenderWindow': inconsistent dll linkage
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(27,24): message : see previous definition of 'CreateRenderWindow'
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(186,1): warning C4273: 'Renderer::SDLInput': inconsistent dll linkage
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(30,24): message : see previous definition of 'SDLInput'
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(39,24): message : see previous definition of 'InitRenderer'
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(99,1): warning C4273: 'Renderer::RenderLoop': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(41,24): message : see previous definition of 'RenderLoop'
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(207,1): warning C4273: 'Renderer::SetD3DStates': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(44,24): message : see previous definition of 'SetD3DStates'
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(222,1): warning C4273: 'Renderer::CreateRenderWindow': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(40,24): message : see previous definition of 'CreateRenderWindow'
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(248,1): warning C4273: 'Renderer::SDLInput': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(43,24): message : see previous definition of 'SDLInput'
+  Generating Code...
      Creating library C:\Users\Owner\source\repos\Aurora Engine\x64\Debug\engine.lib and object C:\Users\Owner\source\repos\Aurora Engine\x64\Debug\engine.exp
   engine.vcxproj -> C:\Users\Owner\source\repos\Aurora Engine\x64\Debug\engine.dll

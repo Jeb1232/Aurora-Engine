@@ -10,6 +10,12 @@
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\pixelShader.cso</FullPath>
     </ContentFile>
     <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\tessellationDomainShader.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\tessellationHullShader.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\vertexShader.cso</FullPath>
     </ContentFile>
   </ContentFiles>

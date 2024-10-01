@@ -1,0 +1,26 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(499,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
+  RenderPanel.cpp
+App.obj : warning LNK4006: "private: static struct wxEventTableEntry const * const RenderPanel::sm_eventTableEntries" (?sm_eventTableEntries@RenderPanel@@0QBUwxEventTableEntry@@B) already defined in RenderPanel.obj; second definition ignored
+App.obj : warning LNK4006: "protected: static struct wxEventTable const RenderPanel::sm_eventTable" (?sm_eventTable@RenderPanel@@1UwxEventTable@@B) already defined in RenderPanel.obj; second definition ignored
+App.obj : warning LNK4006: "protected: static class wxEventHashTable RenderPanel::sm_eventHashTable" (?sm_eventHashTable@RenderPanel@@1VwxEventHashTable@@A) already defined in RenderPanel.obj; second definition ignored
+App.obj : warning LNK4006: "protected: virtual class wxEventHashTable & __cdecl RenderPanel::GetEventHashTable(void)const " (?GetEventHashTable@RenderPanel@@MEBAAEAVwxEventHashTable@@XZ) already defined in RenderPanel.obj; second definition ignored
+App.obj : warning LNK4006: "protected: virtual struct wxEventTable const * __cdecl RenderPanel::GetEventTable(void)const " (?GetEventTable@RenderPanel@@MEBAPEBUwxEventTable@@XZ) already defined in RenderPanel.obj; second definition ignored
+MainFrame.obj : warning LNK4006: "private: static struct wxEventTableEntry const * const RenderPanel::sm_eventTableEntries" (?sm_eventTableEntries@RenderPanel@@0QBUwxEventTableEntry@@B) already defined in RenderPanel.obj; second definition ignored
+MainFrame.obj : warning LNK4006: "protected: static struct wxEventTable const RenderPanel::sm_eventTable" (?sm_eventTable@RenderPanel@@1UwxEventTable@@B) already defined in RenderPanel.obj; second definition ignored
+MainFrame.obj : warning LNK4006: "protected: static class wxEventHashTable RenderPanel::sm_eventHashTable" (?sm_eventHashTable@RenderPanel@@1VwxEventHashTable@@A) already defined in RenderPanel.obj; second definition ignored
+MainFrame.obj : warning LNK4006: "protected: virtual class wxEventHashTable & __cdecl RenderPanel::GetEventHashTable(void)const " (?GetEventHashTable@RenderPanel@@MEBAAEAVwxEventHashTable@@XZ) already defined in RenderPanel.obj; second definition ignored
+MainFrame.obj : warning LNK4006: "protected: virtual struct wxEventTable const * __cdecl RenderPanel::GetEventTable(void)const " (?GetEventTable@RenderPanel@@MEBAPEBUwxEventTable@@XZ) already defined in RenderPanel.obj; second definition ignored
+C:\Users\Owner\source\repos\Aurora Engine\x64\Release\editor\editor.exe : warning LNK4088: image being generated due to /FORCE option; image may not run
+  Generating code
+  17 of 153 functions (11.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    1 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+* CIL library *(* CIL module *) : warning LNK4006: "private: static struct wxEventTableEntry const * const RenderPanel::sm_eventTableEntries" (?sm_eventTableEntries@RenderPanel@@0QBUwxEventTableEntry@@B) already defined in * CIL library *(* CIL module *); second definition ignored
+* CIL library *(* CIL module *) : warning LNK4006: "protected: static struct wxEventTable const RenderPanel::sm_eventTable" (?sm_eventTable@RenderPanel@@1UwxEventTable@@B) already defined in * CIL library *(* CIL module *); second definition ignored
+* CIL library *(* CIL module *) : warning LNK4006: "protected: static class wxEventHashTable RenderPanel::sm_eventHashTable" (?sm_eventHashTable@RenderPanel@@1VwxEventHashTable@@A) already defined in * CIL library *(* CIL module *); second definition ignored
+* CIL library *(* CIL module *) : warning LNK4006: "private: static struct wxEventTableEntry const * const RenderPanel::sm_eventTableEntries" (?sm_eventTableEntries@RenderPanel@@0QBUwxEventTableEntry@@B) already defined in * CIL library *(* CIL module *); second definition ignored
+* CIL library *(* CIL module *) : warning LNK4006: "protected: static struct wxEventTable const RenderPanel::sm_eventTable" (?sm_eventTable@RenderPanel@@1UwxEventTable@@B) already defined in * CIL library *(* CIL module *); second definition ignored
+* CIL library *(* CIL module *) : warning LNK4006: "protected: static class wxEventHashTable RenderPanel::sm_eventHashTable" (?sm_eventHashTable@RenderPanel@@1VwxEventHashTable@@A) already defined in * CIL library *(* CIL module *); second definition ignored
+C:\Users\Owner\source\repos\Aurora Engine\x64\Release\editor\editor.exe : warning LNK4088: image being generated due to /FORCE option; image may not run
+  editor.vcxproj -> C:\Users\Owner\source\repos\Aurora Engine\x64\Release\editor\editor.exe

@@ -1,20 +1,11 @@
 #include "AudioSource.h"
 
-AudioSource::AudioSource() 
+AudioSource::AudioSource(ALCdevice* device, ALCcontext* context)
 {
-	device = alcOpenDevice(nullptr);
-    if (!device) {
-        std::cerr << "Failed to open audio device" << std::endl;
-        return;
-    }
+	sDevice = device;
 
-    context = alcCreateContext(device, nullptr);
-    if (!context || alcMakeContextCurrent(context) == ALC_FALSE) {
-        if (context) alcDestroyContext(context);
-        alcCloseDevice(device);
-        std::cerr << "Failed to create OpenAL context" << std::endl;
-        return;
-    }
+	sContext = context;
+
 
 	// Create a source and set its position
 	alGenSources(1, &source);
@@ -49,6 +40,20 @@ AudioSource::~AudioSource()
 	if (audioThread.joinable()) {
 		audioThread.join();
 	}
+}
+
+void AudioSource::setPosition(float x, float y, float z) 
+{
+	position[0] = x;
+	position[1] = y;
+	position[2] = z;
+}
+
+void AudioSource::setVelocity(float x, float y, float z) 
+{
+	velocity[0] = x;
+	velocity[1] = y;
+	velocity[2] = z;
 }
 
 void AudioSource::play(const char* path) 
@@ -122,8 +127,6 @@ void AudioSource::play(const char* path)
 
     // Load the sound data
     if (!buffer) {
-        alcDestroyContext(context);
-        alcCloseDevice(device);
         return;
     }
 
@@ -133,16 +136,6 @@ void AudioSource::play(const char* path)
 void AudioSource::playBuf(ALuint buffer) {
 
 	alSourcei(source, AL_BUFFER, buffer);
-
-	// Set listener properties
-	ALfloat listenerPos[] = { 0.0f, 0.0f, 0.0f };
-	ALfloat listenerVel[] = { 0.0f, 0.0f, 0.0f };
-	ALfloat listenerOri[] = { 0.0f, 0.0f, -1.0f, 0.0f, -1.0f, 0.0f }; // at, up
-
-	alListenerfv(AL_POSITION, listenerPos);
-	alListenerfv(AL_VELOCITY, listenerVel);
-	alListenerfv(AL_ORIENTATION, listenerOri);
-	alListenerf(AL_GAIN, 0.99f);
 
 	// Play the sound
 	alSourcePlay(source);
@@ -156,6 +149,10 @@ void AudioSource::playBuf(ALuint buffer) {
 		alSourcefv(source, AL_POSITION, position);
 		alSourcefv(source, AL_VELOCITY, velocity);
 		alSourcei(source, AL_LOOPING, looping);
+		alListenerfv(AL_POSITION, listener.position);
+		alListenerfv(AL_VELOCITY, listener.velocity);
+		alListenerfv(AL_ORIENTATION, listener.orientation);
+		alListenerf(AL_GAIN, listener.gain);
 		alGetSourcei(source, AL_SOURCE_STATE, &state);
 	}
 }

@@ -19,35 +19,56 @@
 #include<glm/gtx/matrix_major_storage.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/scalar_constants.hpp>
+#include"Model.h"
+#include"../file/asset_packer.h"
+#include"Camera.h"
 
 class Renderer
 {
 public:
+	ID3D11Device* m_device = nullptr;
+	ID3D11DeviceContext* m_deviceContext = nullptr;
 	struct Vertex {
-		float x, y;
-		float r, g, b;
+		//glm::vec3 pos;
+		//glm::vec3 normals;
+		//glm::vec2 uvs;
+		float x, y, z;
+		float nx, ny, nz;
+		float u, v;
 	};
-
+	__declspec(align(16))
 	struct ConstantBuffer {
 		glm::mat4 modelMatrix;
 		glm::mat4 viewMatrix;
 		glm::mat4 projectionMatrix;
+		glm::vec3 cameraPos;
+	};
+	__declspec(align(16))
+	struct LightCB {
+	    glm::vec3 direction;
+		//glm::vec3 camPosition;
 	};
 	SDL_Window* window;
+	HWND hWindow;
 	SDL_SysWMinfo wmInfo;
 	bool finishedRendering = false;
-	void AURORAENGINE_API InitRenderer();
+	void AURORAENGINE_API InitRenderer(int width, int height, HWND hWnd);
 	void AURORAENGINE_API CreateRenderWindow(int width, int height, bool fullscreen);
 	void AURORAENGINE_API RenderLoop(int width, int height);
+	void AURORAENGINE_API DrawFrame(int width, int height, HWND hwnd);
+	void AURORAENGINE_API EditorRenderLoop(int width, int height, HWND hwnd);
+	bool init = false;
+	bool edResizing = false;
 private:
 	void AURORAENGINE_API SDLInput();
 	void AURORAENGINE_API SetD3DStates();
+	void AURORAENGINE_API ThrowIfFailed(HRESULT hr);
 	IDXGISwapChain* m_swapChain;
-	ID3D11Device* m_device = nullptr;
-	ID3D11DeviceContext* m_deviceContext = nullptr;
 	ID3D11RenderTargetView* m_renderTargetView = nullptr;
-	ID3D11Buffer* vertexBuffer = nullptr;
+	//ID3D11Buffer* vertexBuffer = nullptr;
 	ID3D11VertexShader* vertexShader = nullptr;
+	ID3D11HullShader* hullShader = nullptr;
+	ID3D11DomainShader* domainShader = nullptr;
 	ID3D11PixelShader* pixelShader = nullptr;
 	ID3D11InputLayout* inputLayout = nullptr;
 	ID3D11RasterizerState* m_rasterizerState = nullptr;
@@ -56,6 +77,6 @@ private:
 	ID3D11DepthStencilView* m_depthStencilView = nullptr;
 	ID3D11Texture2D* m_backBuffer = nullptr;
 	ID3D11Texture2D* m_depthBuffer = nullptr;
-	bool init = false;
+	std::thread editorrenderThread;
 };
 

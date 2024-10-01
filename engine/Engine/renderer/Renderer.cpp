@@ -1,5 +1,8 @@
 #include "Renderer.h"
+#include"Texture.h"
 
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+float deltaTime = 0;
 
 class com_exception : public std::exception
 {
@@ -18,35 +21,37 @@ private:
     HRESULT result;
 };
 
-void ThrowIfFailed(HRESULT hr)
+void Renderer::ThrowIfFailed(HRESULT hr)
 {
     if (FAILED(hr))
     {
         // Set a breakpoint on this line to catch Win32 API errors.
-        std::cout << com_exception(hr).what() << std::endl;
+        //std::cout << com_exception(hr).what() << std::endl;
+        MessageBox(hWindow, com_exception(hr).what(), "Engine Error", MB_ICONWARNING | MB_OK);
     }
 }
 
-void Renderer::InitRenderer() 
+void Renderer::InitRenderer(int width, int height, HWND hWnd)
 {
-    HWND window = (HWND)wmInfo.info.win.window;
     D3D_FEATURE_LEVEL featureLevel;
     const D3D_FEATURE_LEVEL featureLevels[1]
     {
         D3D_FEATURE_LEVEL_11_0
     };
 
+    //MessageBox(window, "example engine error window", "Engine Error", MB_ICONWARNING | MB_OK);
+
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     ZeroMemory(&swapChainDesc, sizeof(swapChainDesc));
     swapChainDesc.BufferCount = 1;
-    swapChainDesc.BufferDesc.Width = 0;
-    swapChainDesc.BufferDesc.Height = 0;
+    swapChainDesc.BufferDesc.Width = width;
+    swapChainDesc.BufferDesc.Height = height;
     swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     swapChainDesc.BufferDesc.RefreshRate.Numerator = 60;
     swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-    swapChainDesc.OutputWindow = window;
+    swapChainDesc.OutputWindow = hWnd;
     swapChainDesc.SampleDesc.Count = 1;
     swapChainDesc.Windowed = true;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
@@ -57,7 +62,6 @@ void Renderer::InitRenderer()
     
     HRESULT result = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevels, 1, D3D11_SDK_VERSION, &swapChainDesc, &m_swapChain, &m_device, &featureLevel, &m_deviceContext);
     ThrowIfFailed(result);
-
     m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&m_backBuffer);
     m_device->CreateRenderTargetView(m_backBuffer, nullptr, &m_renderTargetView);
 
@@ -70,8 +74,8 @@ void Renderer::InitRenderer()
     m_deviceContext->OMSetDepthStencilState(pDSState, 1u);
 
     D3D11_TEXTURE2D_DESC descDepth = {};
-    descDepth.Width = 1280u;
-    descDepth.Height = 720U;
+    descDepth.Width = width;
+    descDepth.Height = height;
     descDepth.MipLevels = 1u;
     descDepth.ArraySize = 1u;
     descDepth.Format = DXGI_FORMAT_D32_FLOAT;
@@ -89,7 +93,7 @@ void Renderer::InitRenderer()
 
     m_deviceContext->OMSetRenderTargets(1u, &m_renderTargetView, m_depthStencilView);
 
-    m_backBuffer->Release();
+    //m_backBuffer->Release();
     init = true;
 }
 
@@ -98,108 +102,185 @@ float timeAng = 0;
 void Renderer::RenderLoop(int width, int height)
 {
     if (!init) { return; }
+
+    //Model lModel(m_device);
+    //lModel.LoadModel("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/sea-keep-lonely-watcher/source/Stronghold.fbx");
+    Model lModel;
+    lModel.LoadModelFromPAK("backpack.obj", m_device);
    
     ID3DBlob* vsBlob;
+    ID3DBlob* hsBlob;
+    ID3DBlob* dsBlob;
     ID3DBlob* psBlob;
 
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/vertexShader.cso", &vsBlob);
+    D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/tessellationHullShader.cso", &hsBlob);
+    D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/tessellationDomainShader.cso", &dsBlob);
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/pixelShader.cso", &psBlob);
 
     m_device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader);
+    m_device->CreateHullShader(hsBlob->GetBufferPointer(), hsBlob->GetBufferSize(), nullptr, &hullShader);
+    m_device->CreateDomainShader(dsBlob->GetBufferPointer(), dsBlob->GetBufferSize(), nullptr, &domainShader);
     m_device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
 
-    D3D11_INPUT_ELEMENT_DESC layout[] = {
-        {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA},
-        {"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-    };
-    m_device->CreateInputLayout(layout, 2, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
 
-    Vertex vertices[]{
-        -1,-1,1,0,0,
-        0,1,0,1,0,
-        1,-1,0,0,1,
+    D3D11_INPUT_ELEMENT_DESC layout[] = {
+        {"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA},
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
-    auto vertexBufferDesc = CD3D11_BUFFER_DESC(sizeof(vertices), D3D11_BIND_VERTEX_BUFFER);
-    D3D11_SUBRESOURCE_DATA vertexData = { 0 };
-    vertexData.pSysMem = vertices;
+    m_device->CreateInputLayout(layout, 3, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
+
+    
 
     SetD3DStates();
 
     auto viewport = CD3D11_VIEWPORT(0.0f, 0.0f, (float)width, (float)height);
     m_deviceContext->RSSetViewports(1, &viewport);
 
-    m_device->CreateBuffer(&vertexBufferDesc, &vertexData, &vertexBuffer);
-    
-    m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, nullptr);
+    Texture* diffuse = new Texture("diffuse.jpg", m_device, m_deviceContext);
+    Texture* heightMap = new Texture("hmap.png", m_device, m_deviceContext);
+    Texture* specular = new Texture("specular.jpg", m_device, m_deviceContext);
+    //Texture* textures = { {"diffuse.jpg", m_device, m_deviceContext},{"specular.jpg", m_device, m_deviceContext} };
+    //textures[0] = diffuse;
+    //textures[1] = specular;
 
-    glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+    //m_deviceContext->IASetIndexBuffer(lModel.meshes[0].indexBuffer, DXGI_FORMAT_R16_UINT, 0u);
+    
+    float clearColor[] = { 0.25f,0.5f,1,1 };
+    glm::mat4 model = glm::mat4(1.0f);	// make sure to initialize matrix to identity matrix first
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 projection = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, glm::radians(50.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-    model = glm::transpose(model);
     float radius = 10.0f;
-    view = glm::lookAtRH(glm::vec3(0.0f, 0.0f, -10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    projection = glm::perspectiveRH_ZO(glm::radians(60.0f), (float)width / (float)height, 0.1f, 1000.0f);
 
-    ConstantBuffer cb = {
-        model,
-        view,
-        projection
-    };
 
-    ID3D11Buffer* constantBuffer;
-    D3D11_BUFFER_DESC cbd;
-    cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    cbd.Usage = D3D11_USAGE_DYNAMIC;
-    cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    cbd.MiscFlags = 0u;
-    cbd.ByteWidth = sizeof(cb);
-    cbd.StructureByteStride = 0u;
-    D3D11_SUBRESOURCE_DATA csd = {};
-    csd.pSysMem = &cb;
-    m_device->CreateBuffer(&cbd, &csd, &constantBuffer);
-    m_deviceContext->VSSetConstantBuffers(0u, 1u, &constantBuffer);
-    
     Uint64 NOW = SDL_GetPerformanceCounter();
     Uint64 LAST = 0;
-    float deltaTime = 0;
 
-    float clearColor[] = { 0.25f,0.5f,1,1 };
+    //Texture* tex = nullptr;
+    //std::vector<Texture*> loaded_tex;
+    //m_deviceContext->VSSetShaderResources(0, 1, &heightMap->ImageShaderResourceView);
+    //m_deviceContext->VSSetSamplers(0, 1, &heightMap->ImageSamplerState);
+    m_deviceContext->PSSetShaderResources(0, 1, &diffuse->ImageShaderResourceView);
+    m_deviceContext->PSSetSamplers(0, 1, &diffuse->ImageSamplerState);
+    m_deviceContext->PSSetShaderResources(1, 1, &specular->ImageShaderResourceView);
+    m_deviceContext->PSSetSamplers(1, 1, &specular->ImageSamplerState);
+
+    float tme = 0;
     while (!finishedRendering)
     {
         SDLInput();
+        
+        m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColor);
+
+        // matrix stuff under this
+        float camX = std::sin(tme) * radius;
+        float camZ = std::cos(tme) * radius;
+        //view = glm::lookAtRH(glm::vec3(camX, 1.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        view = camera.GetViewMatrix();
+        projection = glm::perspectiveRH_ZO(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 10000.0f);
+
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+
+        ConstantBuffer cb = {
+            model,
+            view,
+            projection,
+            camera.Position
+        };
+
+
+        ID3D11Buffer* constantBuffer;
+        D3D11_BUFFER_DESC cbd;
+        cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        cbd.Usage = D3D11_USAGE_DYNAMIC;
+        cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        cbd.MiscFlags = 0u;
+        cbd.ByteWidth = sizeof(cb);
+        cbd.StructureByteStride = 0u;
+        D3D11_SUBRESOURCE_DATA csd = {};
+        csd.pSysMem = &cb;
+        m_device->CreateBuffer(&cbd, &csd, &constantBuffer);
+        m_deviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
+
+
+        glm::vec3 directionL(0.0f, -1.0f, -1.0f);
+
+        LightCB lcb = {
+            directionL,
+        };
+
+        ID3D11Buffer* constantBufferL;
+        D3D11_BUFFER_DESC cbdl;
+        cbdl.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        cbdl.Usage = D3D11_USAGE_DYNAMIC;
+        cbdl.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        cbdl.MiscFlags = 0u;
+        cbdl.ByteWidth = sizeof(lcb);
+        cbdl.StructureByteStride = 0u;
+        D3D11_SUBRESOURCE_DATA lcsd = {};
+        lcsd.pSysMem = &lcb;
+        m_device->CreateBuffer(&cbdl, &lcsd, &constantBufferL);
+        //m_deviceContext->UpdateSubresource(constantBufferL, 0, 0, &lcb, 0, 0);
+        m_deviceContext->PSSetConstantBuffers(0, 1, &constantBufferL);
+
+        m_deviceContext->RSSetState(m_rasterizerState);
+        m_deviceContext->OMSetBlendState(m_blendState, NULL, 0xffffffff);
+        m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0u);
+        //D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST
+        m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        m_deviceContext->IASetInputLayout(inputLayout);
+        m_deviceContext->VSSetShader(vertexShader, nullptr, 0);
+        //m_deviceContext->HSSetShader(hullShader, nullptr, 0);
+        //m_deviceContext->DSSetShader(domainShader, nullptr, 0);
+        m_deviceContext->PSSetShader(pixelShader, nullptr, 0);
+
+        //m_deviceContext->PSSetShaderResources(0, 1, &diffuse->ImageShaderResourceView);
+        //m_deviceContext->PSSetSamplers(0, 1, &diffuse->ImageSamplerState);
+
+        //Rendering stuff under this
+        for (int i = 0; i < lModel.meshes.size(); i++) 
+        {
+            UINT stride = sizeof(Vertex);
+            UINT offset = 0;
+
+            m_deviceContext->IASetVertexBuffers(0, 1, &lModel.meshes[i].vertexBuffer, &stride, &offset);
+            m_deviceContext->IASetIndexBuffer(lModel.meshes[i].indexBuffer, DXGI_FORMAT_R16_UINT, 0u);
+            /*
+            for (int t = 0; t < lModel.meshes[i].diffuseMaps.size(); t++) {
+                //std::string tmpPath = std::string(lModel.meshes[i].diffuseMaps[t].path);
+                //std::cout << tmpPath << " " << i << '\n';
+                //tex = new Texture(tmpPath.c_str(), m_device);
+                if (std::string(loaded_tex[i + t]->Tpath).find('/') != std::string::npos) {
+                    m_deviceContext->PSSetShaderResources(0, 1, &loaded_tex[i + t]->ImageShaderResourceView);
+                    m_deviceContext->PSSetSamplers(0, 1, &loaded_tex[i + t]->ImageSamplerState);
+                }
+                else if (std::string(tex->Tpath).find('/') == std::string::npos) {
+                    //delete[] tex;
+                }
+            }
+            */
+            m_deviceContext->DrawIndexed((UINT)lModel.meshes[i].indices.size(), 0u, 0u);
+        }
+        
+        m_swapChain->Present(1, 0);
 
         LAST = NOW;
         NOW = SDL_GetPerformanceCounter();
 
         deltaTime = ((NOW - LAST) / (float)SDL_GetPerformanceFrequency());
-
-        m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColor);
-
-        m_deviceContext->RSSetState(m_rasterizerState);
-        m_deviceContext->OMSetBlendState(m_blendState, NULL, 0xffffffff);
-        m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0u);
-
-        m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-        m_deviceContext->IASetInputLayout(inputLayout);
-        m_deviceContext->VSSetShader(vertexShader, nullptr, 0);
-        m_deviceContext->PSSetShader(pixelShader, nullptr, 0);
-
-        //Rendering stuff under this
-        UINT stride = sizeof(Vertex);
-        UINT offset = 0;
-        m_deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-        m_deviceContext->Draw(3, 0);
-        
-        m_swapChain->Present(1, 0);
+        tme += deltaTime;
+        std::cout << 1.0f/deltaTime << '\n';
+        constantBuffer->Release();
+        constantBufferL->Release();
     }
     //vertexBuffer->Release();
-    //vertexShader->Release();
-    //pixelShader->Release();
-    //m_renderTargetView->Release();
+    vertexShader->Release();
+    pixelShader->Release();
+    m_renderTargetView->Release();
     SDL_Quit();
 }
 
@@ -239,27 +320,287 @@ void Renderer::CreateRenderWindow(int width, int height, bool fullscreen)
     SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo(window, &wmInfo);
 
-    InitRenderer();
+    InitRenderer(width, height, (HWND)wmInfo.info.win.window);
 
     RenderLoop(width, height);
 }
 
+bool Edshouldberendering = true;
+
+void Renderer::DrawFrame(int width, int height, HWND hwnd) {
+    Edshouldberendering = false;
+    if (editorrenderThread.joinable()) {
+        editorrenderThread.join();
+    }
+    if (!edResizing) {
+        editorrenderThread = std::thread(&Renderer::EditorRenderLoop, this, width, height, hwnd);
+        edResizing = true;
+    }
+    edResizing = false;
+    //EditorRenderLoop(width, height);
+}
+
+void Renderer::EditorRenderLoop(int width, int height,  HWND hwnd) {
+    InitRenderer(width, height, hwnd);
+    if (!init) { Edshouldberendering = false; return; }
+    edResizing = false;
+    //Model lModel(m_device);
+    //lModel.LoadModel("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/sea-keep-lonely-watcher/source/Stronghold.fbx");
+    Model lModel;
+    lModel.LoadModelFromPAK("backpack.obj", m_device);
+
+    ID3DBlob* vsBlob;
+    ID3DBlob* hsBlob;
+    ID3DBlob* dsBlob;
+    ID3DBlob* psBlob;
+
+    D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/vertexShader.cso", &vsBlob);
+    D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/tessellationHullShader.cso", &hsBlob);
+    D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/tessellationDomainShader.cso", &dsBlob);
+    D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/pixelShader.cso", &psBlob);
+
+    m_device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader);
+    m_device->CreateHullShader(hsBlob->GetBufferPointer(), hsBlob->GetBufferSize(), nullptr, &hullShader);
+    m_device->CreateDomainShader(dsBlob->GetBufferPointer(), dsBlob->GetBufferSize(), nullptr, &domainShader);
+    m_device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
+
+    D3D11_INPUT_ELEMENT_DESC layout[] = {
+        {"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA},
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    };
+    m_device->CreateInputLayout(layout, 3, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
+
+
+
+    SetD3DStates();
+
+    auto viewport = CD3D11_VIEWPORT(0.0f, 0.0f, (float)width, (float)height);
+    m_deviceContext->RSSetViewports(1, &viewport);
+
+    Texture* diffuse = new Texture("diffuse.jpg", m_device, m_deviceContext);
+    Texture* heightMap = new Texture("hmap.png", m_device, m_deviceContext);
+    Texture* specular = new Texture("specular.jpg", m_device, m_deviceContext);
+    //Texture* textures = { {"diffuse.jpg", m_device, m_deviceContext},{"specular.jpg", m_device, m_deviceContext} };
+    //textures[0] = diffuse;
+    //textures[1] = specular;
+
+    //m_deviceContext->IASetIndexBuffer(lModel.meshes[0].indexBuffer, DXGI_FORMAT_R16_UINT, 0u);
+
+    float clearColor[] = { 0.25f,0.5f,1,1 };
+    glm::mat4 model = glm::mat4(1.0f);	// make sure to initialize matrix to identity matrix first
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 projection = glm::mat4(1.0f);
+    float radius = 10.0f;
+
+
+    Uint64 NOW = SDL_GetPerformanceCounter();
+    Uint64 LAST = 0;
+
+    //Texture* tex = nullptr;
+    //std::vector<Texture*> loaded_tex;
+    //m_deviceContext->VSSetShaderResources(0, 1, &heightMap->ImageShaderResourceView);
+    //m_deviceContext->VSSetSamplers(0, 1, &heightMap->ImageSamplerState);
+    m_deviceContext->PSSetShaderResources(0, 1, &diffuse->ImageShaderResourceView);
+    m_deviceContext->PSSetSamplers(0, 1, &diffuse->ImageSamplerState);
+    m_deviceContext->PSSetShaderResources(1, 1, &specular->ImageShaderResourceView);
+    m_deviceContext->PSSetSamplers(1, 1, &specular->ImageSamplerState);
+
+    float tme = 0;
+    Edshouldberendering = true;
+    while (Edshouldberendering) {
+        //SDLInput();
+
+        m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColor);
+
+        // matrix stuff under this
+        float camX = std::sin(tme) * radius;
+        float camZ = std::cos(tme) * radius;
+        //view = glm::lookAtRH(glm::vec3(camX, 1.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        view = camera.GetViewMatrix();
+        projection = glm::perspectiveRH_ZO(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 10000.0f);
+
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+
+        ConstantBuffer cb = {
+            model,
+            view,
+            projection,
+            camera.Position
+        };
+
+
+        ID3D11Buffer* constantBuffer;
+        D3D11_BUFFER_DESC cbd;
+        cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        cbd.Usage = D3D11_USAGE_DYNAMIC;
+        cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        cbd.MiscFlags = 0u;
+        cbd.ByteWidth = sizeof(cb);
+        cbd.StructureByteStride = 0u;
+        D3D11_SUBRESOURCE_DATA csd = {};
+        csd.pSysMem = &cb;
+        m_device->CreateBuffer(&cbd, &csd, &constantBuffer);
+        m_deviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
+
+
+        glm::vec3 directionL(0.0f, -1.0f, -1.0f);
+
+        LightCB lcb = {
+            directionL,
+        };
+
+        ID3D11Buffer* constantBufferL;
+        D3D11_BUFFER_DESC cbdl;
+        cbdl.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        cbdl.Usage = D3D11_USAGE_DYNAMIC;
+        cbdl.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        cbdl.MiscFlags = 0u;
+        cbdl.ByteWidth = sizeof(lcb);
+        cbdl.StructureByteStride = 0u;
+        D3D11_SUBRESOURCE_DATA lcsd = {};
+        lcsd.pSysMem = &lcb;
+        m_device->CreateBuffer(&cbdl, &lcsd, &constantBufferL);
+        //m_deviceContext->UpdateSubresource(constantBufferL, 0, 0, &lcb, 0, 0);
+        m_deviceContext->PSSetConstantBuffers(0, 1, &constantBufferL);
+
+        m_deviceContext->RSSetState(m_rasterizerState);
+        m_deviceContext->OMSetBlendState(m_blendState, NULL, 0xffffffff);
+        m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0u);
+        //D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST
+        m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        m_deviceContext->IASetInputLayout(inputLayout);
+        m_deviceContext->VSSetShader(vertexShader, nullptr, 0);
+        //m_deviceContext->HSSetShader(hullShader, nullptr, 0);
+        //m_deviceContext->DSSetShader(domainShader, nullptr, 0);
+        m_deviceContext->PSSetShader(pixelShader, nullptr, 0);
+
+        //m_deviceContext->PSSetShaderResources(0, 1, &diffuse->ImageShaderResourceView);
+        //m_deviceContext->PSSetSamplers(0, 1, &diffuse->ImageSamplerState);
+
+        //Rendering stuff under this
+        for (int i = 0; i < lModel.meshes.size(); i++)
+        {
+            UINT stride = sizeof(Vertex);
+            UINT offset = 0;
+
+            m_deviceContext->IASetVertexBuffers(0, 1, &lModel.meshes[i].vertexBuffer, &stride, &offset);
+            m_deviceContext->IASetIndexBuffer(lModel.meshes[i].indexBuffer, DXGI_FORMAT_R16_UINT, 0u);
+            /*
+            for (int t = 0; t < lModel.meshes[i].diffuseMaps.size(); t++) {
+                //std::string tmpPath = std::string(lModel.meshes[i].diffuseMaps[t].path);
+                //std::cout << tmpPath << " " << i << '\n';
+                //tex = new Texture(tmpPath.c_str(), m_device);
+                if (std::string(loaded_tex[i + t]->Tpath).find('/') != std::string::npos) {
+                    m_deviceContext->PSSetShaderResources(0, 1, &loaded_tex[i + t]->ImageShaderResourceView);
+                    m_deviceContext->PSSetSamplers(0, 1, &loaded_tex[i + t]->ImageSamplerState);
+                }
+                else if (std::string(tex->Tpath).find('/') == std::string::npos) {
+                    //delete[] tex;
+                }
+            }
+            */
+            m_deviceContext->DrawIndexed((UINT)lModel.meshes[i].indices.size(), 0u, 0u);
+        }
+
+        m_swapChain->Present(1, 0);
+    }
+    vertexShader->Release();
+    pixelShader->Release();
+    //m_renderTargetView->Release();
+    //SDL_Quit();
+}
+
+bool firstMouse = true;
+
+
+float xlastPos = 0;
+float ylastPos = 0;
+float xPos = 0;
+float yPos = 0;
+bool w, s, a, d;
+
 void Renderer::SDLInput()
 {
     SDL_Event event;
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+
+    if (w) {
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    }
+    if (s) {
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    }
+    if (a) {
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    }
+    if (d) {
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+    }
+
     while (SDL_PollEvent(&event))
     {
-        if (event.type == SDL_QUIT)
+        if (event.type == SDL_QUIT) {
             finishedRendering = true;
-        break;
-        if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+            break;
+        }
+        if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window)) {
             finishedRendering = true;
-        break;
-        if (event.type == SDL_KEYDOWN)
+            break;
+        }
+        if (event.type == SDL_KEYDOWN) {
             if (event.key.keysym.sym == SDLK_ESCAPE) {
                 finishedRendering = true;
                 break;
             }
+            if (event.key.keysym.sym == SDLK_w) {
+                w = true;
+            }
+            if (event.key.keysym.sym == SDLK_s) {
+                s = true;
+            }
+            if (event.key.keysym.sym == SDLK_a) {
+                a = true;
+            }
+            if (event.key.keysym.sym == SDLK_d) {
+                d = true;
+            }
+        }
+        if (event.type == SDL_KEYUP) {
+            if (event.key.keysym.sym == SDLK_w) {
+                w = false;
+            }
+            if (event.key.keysym.sym == SDLK_s) {
+                s = false;
+            }
+            if (event.key.keysym.sym == SDLK_a) {
+                a = false;
+            }
+            if (event.key.keysym.sym == SDLK_d) {
+                d = false;
+            }
+        }
+        if (event.type == SDL_MOUSEMOTION) {
+            xPos += event.motion.xrel;
+            yPos += event.motion.yrel;
+
+            if (firstMouse) {
+                xlastPos = xPos;
+                ylastPos = yPos; 
+                firstMouse = false;
+            }
+            
+            float xOffset = xPos - xlastPos;
+            float yOffset = ylastPos - yPos;
+
+            xlastPos = xPos;
+            ylastPos = yPos;
+
+            camera.ProcessMouseMovement(xOffset, yOffset, true);
+        }
         if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED && event.window.windowID == SDL_GetWindowID(window))
         {
 
