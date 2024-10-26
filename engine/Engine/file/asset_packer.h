@@ -13,7 +13,6 @@ public:
 		char fileSignature[6];
 		float fileVersion;
 		int  numOfEntries;
-		int encryptValue;
 	};
 	struct FileTableEntry {
 		char fileName[30];

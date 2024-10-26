@@ -9,7 +9,8 @@
 #include<exception>
 #include<fstream>
 #include<vector>
-#include"Renderer.h"
+//#include"Renderer.h"
+#include"../file/asset_packer.h"
 class Texture
 {
 public:

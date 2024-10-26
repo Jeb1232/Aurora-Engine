@@ -1,4 +1,5 @@
 #include "aPhysicsSystem.h"
+#include"Rigidbody.h"
 
 cPhysicsSystem::cPhysicsSystem() {
 
@@ -24,34 +25,34 @@ cPhysicsSystem::cPhysicsSystem() {
 	//body_interface = physicsSystem.GetBodyInterface();
 
 
-	//physicsThread = std::thread(&cPhysicsSystem::PhysicsLoop, this);
+	physicsThread = std::thread(&cPhysicsSystem::PhysicsLoop, this);
 	//PhysicsLoop();
 }
 
 cPhysicsSystem::~cPhysicsSystem() {
-	/*
+	
 	for (int i = 0; i < rigidBodys.size(); i++) {
-		physicsSystem.GetBodyInterface().RemoveBody(rigidBodys[i].body.rBody->GetID());
-		physicsSystem.GetBodyInterface().DestroyBody(rigidBodys[i].body.rBody->GetID());
-		if (rigidBodys[i].body.rBody != nullptr) {
-			free(rigidBodys[i].body.rBody);
+		physicsSystem.GetBodyInterface().RemoveBody(rigidBodys[i].crigidBody->rBody->GetID());
+		physicsSystem.GetBodyInterface().DestroyBody(rigidBodys[i].crigidBody->rBody->GetID());
+		if (rigidBodys[i].crigidBody->rBody != nullptr) {
+			free(rigidBodys[i].crigidBody->rBody);
 		}
 	}
-	*/
+	
 	JPH::UnregisterTypes();
 
 	delete JPH::Factory::sInstance;
 	JPH::Factory::sInstance = nullptr;
 }
-/*
+
 void cPhysicsSystem::PhysicsLoop() {
 	bool isSimulating = true;
 	while (isSimulating) {
 		const int cCollisionSteps = 1;
 
 		for (int i = 0; i < rigidBodys.size(); i++) {
-			physicsSystem.GetBodyInterface().GetPositionAndRotation(rigidBodys[i].body.rBody->GetID(), rigidBodys[i].body.position, rigidBodys[i].body.rotation);
-			physicsSystem.GetBodyInterface().GetLinearAndAngularVelocity(rigidBodys[i].body.rBody->GetID(), rigidBodys[i].body.lVelocity, rigidBodys[i].body.aVelocity);
+			physicsSystem.GetBodyInterface().GetPositionAndRotation(rigidBodys[i].crigidBody->rBody->GetID(), rigidBodys[i].crigidBody->position, rigidBodys[i].crigidBody->rotation);
+			physicsSystem.GetBodyInterface().GetLinearAndAngularVelocity(rigidBodys[i].crigidBody->rBody->GetID(), rigidBodys[i].crigidBody->lVelocity, rigidBodys[i].crigidBody->aVelocity);
 		}
 
 		// Step the world
@@ -59,13 +60,3 @@ void cPhysicsSystem::PhysicsLoop() {
 	}
 }
 
-Rigidbody::Rigidbody() {
-	cSettings = JPH::BodyCreationSettings();
-	physicsSystem.physicsSystem.GetBodyInterface().CreateBody(cSettings);
-	physicsSystem.physicsSystem.GetBodyInterface().AddBody(rBody->GetID(), JPH::EActivation::Activate);
-}
-
-Rigidbody::~Rigidbody() {
-
-}
-*/

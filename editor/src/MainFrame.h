@@ -64,7 +64,7 @@ public:
 		info.SetVersion(_("0.1 Alpha"));
 		info.SetDescription(_("The editor for the Aurora Game Engine."));
 		//info.SetDevelopers(arrString);
-		info.SetCopyright("(C) 2024 Jeb_1232. All rights reserved");
+		info.SetCopyright("(C) 2024 Julian Scott. All rights reserved");
 
 		wxAboutBox(info);
 	}

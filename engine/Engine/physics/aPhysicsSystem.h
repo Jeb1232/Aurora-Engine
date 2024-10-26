@@ -1,4 +1,5 @@
 #pragma once
+#include<iostream>
 #include"../dllHeader.h"
 #include<thread>
 #include<Jolt/Jolt.h>
@@ -14,6 +15,22 @@
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 
 //using namespace JPH;
+
+JPH_SUPPRESS_WARNINGS
+
+#ifdef JPH_ENABLE_ASSERTS
+
+// Callback for asserts, connect this to your own assert handler if you have one
+static bool AssertFailedImpl(const char* inExpression, const char* inMessage, const char* inFile, JPH::uint inLine)
+{
+	// Print to the TTY
+	std::cout << inFile << ":" << inLine << ": (" << inExpression << ") " << (inMessage != nullptr ? inMessage : "") << std::endl;
+
+	// Breakpoint
+	return true;
+};
+
+#endif // JPH_ENABLE_ASSERTS
 
 namespace Layers
 {
@@ -154,6 +171,8 @@ public:
 	}
 };
 
+class Rigidbody;
+
 class cPhysicsSystem
 {
 public:
@@ -180,9 +199,9 @@ public:
 	JPH::JobSystemThreadPool job_system = JPH::JobSystemThreadPool(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1);
 
 
-	//struct sRigidBody {
-		//Rigidbody body;
-	//};
+	struct sRigidBody {
+		Rigidbody* crigidBody = nullptr;
+	};
 
 	std::thread physicsThread;
 
@@ -200,26 +219,9 @@ public:
 
 	const float pDeltaTime = 1.0f / 60.0f;
 
-	//std::vector<sRigidBody> rigidBodys;
+	std::vector<sRigidBody> rigidBodys;
 
-	void PhysicsLoop();
-private:
-};
-
-class Rigidbody {
-public:
-	Rigidbody();
-	~Rigidbody();
-
-	//cPhysicsSystem physicsSystem;
-
-	JPH::RVec3 position;
-	JPH::Quat rotation;
-	JPH::Vec3 lVelocity;
-	JPH::Vec3 aVelocity;
-
-	JPH::Body* rBody;
-	JPH::BodyCreationSettings cSettings;
+	void AURORAENGINE_API PhysicsLoop();
 private:
 };
 

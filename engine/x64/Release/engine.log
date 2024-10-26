@@ -1,24 +1,18 @@
-﻿  Renderer.cpp
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(25,1): warning C4273: 'Renderer::ThrowIfFailed': inconsistent dll linkage
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(65,24): message : see previous definition of 'ThrowIfFailed'
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(35,1): warning C4273: 'Renderer::InitRenderer': inconsistent dll linkage
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(55,24): message : see previous definition of 'InitRenderer'
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(103,1): warning C4273: 'Renderer::RenderLoop': inconsistent dll linkage
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(57,24): message : see previous definition of 'RenderLoop'
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(288,1): warning C4273: 'Renderer::SetD3DStates': inconsistent dll linkage
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(64,24): message : see previous definition of 'SetD3DStates'
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(303,1): warning C4273: 'Renderer::CreateRenderWindow': inconsistent dll linkage
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(56,24): message : see previous definition of 'CreateRenderWindow'
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(330,60): warning C4273: 'Renderer::DrawFrame': inconsistent dll linkage
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(58,24): message : see previous definition of 'DrawFrame'
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(343,68): warning C4273: 'Renderer::EditorRenderLoop': inconsistent dll linkage
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(59,24): message : see previous definition of 'EditorRenderLoop'
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.cpp(527,1): warning C4273: 'Renderer::SDLInput': inconsistent dll linkage
-C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Renderer.h(63,24): message : see previous definition of 'SDLInput'
+﻿  Light.cpp
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Light.cpp(13,40): warning C4273: 'Light::setPosition': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Light.h(48,24): message : see previous definition of 'setPosition'
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Light.cpp(17,40): warning C4273: 'Light::setRotation': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Light.h(49,24): message : see previous definition of 'setRotation'
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Light.cpp(21,44): warning C4273: 'Light::setLightColor': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Light.h(50,24): message : see previous definition of 'setLightColor'
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Light.cpp(25,46): warning C4273: 'Light::setAmbientColor': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Light.h(51,24): message : see previous definition of 'setAmbientColor'
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Light.cpp(29,93): warning C4273: 'Light::UpdateLightBuffer': inconsistent dll linkage
+C:\Users\Owner\source\repos\Aurora Engine\engine\Engine\renderer\Light.h(47,24): message : see previous definition of 'UpdateLightBuffer'
      Creating library C:\Users\Owner\source\repos\Aurora Engine\x64\Release\engine.lib and object C:\Users\Owner\source\repos\Aurora Engine\x64\Release\engine.exp
   Generating code
-  1 of 1255 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+  3 of 1519 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    9 functions had inline decision re-evaluated but remain unchanged
+    10 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   engine.vcxproj -> C:\Users\Owner\source\repos\Aurora Engine\x64\Release\engine.dll

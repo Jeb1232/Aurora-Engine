@@ -1,38 +1,59 @@
-struct DS_OUTPUT
+cbuffer MatrixBuffer
 {
-	float4 vPosition : SV_POSITION;
-	//float3 vPos : Position;
+	matrix worldMatrix;
+	matrix viewMatrix;
+	matrix projectionMatrix;
+	float3 cameraPosition;
+};
+
+struct ConstantOutputType
+{
+	float edges[3] : SV_TessFactor;
+	float inside : SV_InsideTessFactor;
+};
+
+struct HullOutputType
+{
+	float3 position : POSITION;
+	float3 normal : NORMAL;
+	float2 uv : UV;
+};
+
+struct PixelInputType
+{
+	float4 position : SV_POSITION;
 	float3 normal : NORMAL;
 	float2 uv: UV;
 };
 
-struct HS_CONTROL_POINT_OUTPUT
-{
-	float3 vPosition : Position; 
-	float3 normal : NORMAL;
-	float2 uv: UV;
-};
 
-struct HS_CONSTANT_DATA_OUTPUT
-{
-	float EdgeTessFactor[3]			: SV_TessFactor;
-	float InsideTessFactor			: SV_InsideTessFactor;
-};
-
-#define NUM_CONTROL_POINTS 3
+Texture2D heightMap;
+SamplerState samp;
 
 [domain("tri")]
-DS_OUTPUT main(
-	HS_CONSTANT_DATA_OUTPUT input,
-	float3 domain : SV_DomainLocation,
-	const OutputPatch<HS_CONTROL_POINT_OUTPUT, NUM_CONTROL_POINTS> patch)
+
+PixelInputType ColorDomainShader(ConstantOutputType input, float3 uvwCoord : SV_DomainLocation, const OutputPatch<HullOutputType, 3> patch)
 {
-	DS_OUTPUT Output;
+    float3 vertexPosition;
+    PixelInputType output;
 
-	Output.vPosition = float4(
-		patch[0].vPosition*domain.x+patch[1].vPosition*domain.y+patch[2].vPosition*domain.z,1);
-	Output.normal = patch[0].normal + patch[1].normal + patch[2].normal;
-	Output.uv = patch[0].uv + patch[1].uv + patch[2].uv;
 
-	return Output;
+	float4 height = heightMap.SampleLevel(samp, uvwCoord.x * patch[0].uv + uvwCoord.y * patch[1].uv + uvwCoord.z * patch[2].uv, 0);
+
+    // Determine the position of the new vertex.
+    vertexPosition = uvwCoord.x * patch[0].position + uvwCoord.y * patch[1].position + uvwCoord.z * patch[2].position;
+
+	vertexPosition += patch[0].normal * height.r * 1;
+
+    // Calculate the position of the new vertex against the world, view, and projection matrices.
+    output.position = mul(worldMatrix, float4(vertexPosition, 1.0f));
+    output.position = mul(viewMatrix, output.position);
+    output.position = mul(projectionMatrix, output.position);
+
+	output.normal = uvwCoord.x * patch[0].normal + uvwCoord.y * patch[1].normal + uvwCoord.z * patch[2].normal;
+
+    // Send the input color into the pixel shader.
+    output.uv = uvwCoord.x * patch[0].uv + uvwCoord.y * patch[1].uv + uvwCoord.z * patch[2].uv;
+
+    return output;
 }

@@ -20,12 +20,16 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/scalar_constants.hpp>
 #include"Model.h"
-#include"../file/asset_packer.h"
+#include"MaterialManager.h"
+#include"Light.h"
+#include"../scene/Scene.h"
 #include"Camera.h"
 
 class Renderer
 {
 public:
+	Scene* currentActiveScene = nullptr;
+	static Renderer* instance;
 	ID3D11Device* m_device = nullptr;
 	ID3D11DeviceContext* m_deviceContext = nullptr;
 	struct Vertex {
@@ -45,7 +49,11 @@ public:
 	};
 	__declspec(align(16))
 	struct LightCB {
+		glm::vec3 position;
 	    glm::vec3 direction;
+		float intensity;
+		glm::vec3 lightColor;
+		glm::vec3 ambientColor;
 		//glm::vec3 camPosition;
 	};
 	SDL_Window* window;
@@ -57,6 +65,7 @@ public:
 	void AURORAENGINE_API RenderLoop(int width, int height);
 	void AURORAENGINE_API DrawFrame(int width, int height, HWND hwnd);
 	void AURORAENGINE_API EditorRenderLoop(int width, int height, HWND hwnd);
+	void AURORAENGINE_API SetActiveScene(Scene* scene);
 	bool init = false;
 	bool edResizing = false;
 private:
@@ -71,12 +80,14 @@ private:
 	ID3D11DomainShader* domainShader = nullptr;
 	ID3D11PixelShader* pixelShader = nullptr;
 	ID3D11InputLayout* inputLayout = nullptr;
+	ID3D11InputLayout* skyboxInputLayout = nullptr;
 	ID3D11RasterizerState* m_rasterizerState = nullptr;
 	ID3D11DepthStencilState* m_depthState = nullptr;
 	ID3D11BlendState* m_blendState = nullptr;
 	ID3D11DepthStencilView* m_depthStencilView = nullptr;
 	ID3D11Texture2D* m_backBuffer = nullptr;
 	ID3D11Texture2D* m_depthBuffer = nullptr;
+	std::vector<ConstantBuffer> constantBuffers;
 	std::thread editorrenderThread;
 };
 

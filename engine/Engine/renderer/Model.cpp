@@ -7,7 +7,7 @@ Model::~Model() {
     }
 }
 
-void Model::LoadModel(const std::string& path, ID3D11Device* m_device) {
+void Model::LoadModel(const std::string& path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path,
         aiProcess_Triangulate |
@@ -24,10 +24,11 @@ void Model::LoadModel(const std::string& path, ID3D11Device* m_device) {
     for (unsigned int i = 0; i < scene->mNumMeshes; ++i) {
         aiMesh* mesh = scene->mMeshes[i];
         Mesh newMesh;
-        std::vector<S_Texture> textures;
+        std::vector<Texture*> textures;
 
-        //aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
         
+        newMesh.material = material->GetName().C_Str();
         //newMesh.diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
         //textures.insert(textures.end(), newMesh.diffuseMaps.begin(), newMesh.diffuseMaps.end());
 
@@ -105,7 +106,7 @@ void Model::LoadModel(const std::string& path, ID3D11Device* m_device) {
     }
 }
 
-void Model::LoadModelFromPAK(const std::string& path, ID3D11Device* m_device) {
+void Model::LoadModelFromPAK(const std::string& path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
     Assimp::Importer importer;
     AssetPacker packer;
     AssetPacker::LoadedFile lFile = packer.LoadFileFromPackage("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/data001.pak", path);
@@ -113,8 +114,14 @@ void Model::LoadModelFromPAK(const std::string& path, ID3D11Device* m_device) {
         aiProcess_Triangulate |
         aiProcess_FlipUVs |
         aiProcess_GenNormals);
-
     free(lFile.data);
+
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
+    {
+        std::cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << std::endl;
+        return;
+    }
+
     if (!scene || !scene->mMeshes) {
         std::cerr << "Error loading model: " << importer.GetErrorString() << std::endl;
         return;
@@ -125,11 +132,12 @@ void Model::LoadModelFromPAK(const std::string& path, ID3D11Device* m_device) {
     for (unsigned int i = 0; i < scene->mNumMeshes; ++i) {
         aiMesh* mesh = scene->mMeshes[i];
         Mesh newMesh;
-        std::vector<S_Texture> textures;
+        //std::vector<Texture*> textures;
 
-        //aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
-        //newMesh.diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+        if (loadMaterials) {
+            newMesh.material = material->GetName().C_Str();
+        }
         //textures.insert(textures.end(), newMesh.diffuseMaps.begin(), newMesh.diffuseMaps.end());
 
         for (unsigned int j = 0; j < mesh->mNumVertices; ++j) {
@@ -175,7 +183,7 @@ void Model::LoadModelFromPAK(const std::string& path, ID3D11Device* m_device) {
         vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
         vertexBufferDesc.ByteWidth = sizeof(Vertex) * static_cast<UINT>(meshes[i].vertices.size());
         vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-        vertexBufferDesc.CPUAccessFlags = 0;
+        vertexBufferDesc.CPUAccessFlags = 0u;
         vertexBufferDesc.StructureByteStride = sizeof(Vertex);
         meshes[i].vertexBuffer = vertexBuffer;
         D3D11_SUBRESOURCE_DATA vertexData = { 0 };
@@ -198,51 +206,40 @@ void Model::LoadModelFromPAK(const std::string& path, ID3D11Device* m_device) {
         meshes[i].ibd = ibd;
         meshes[i].isd = isd;
 
-        m_device->CreateBuffer(&meshes[i].vertexBufferDesc, &meshes[i].vertexData, &meshes[i].vertexBuffer);
-        m_device->CreateBuffer(&meshes[i].ibd, &meshes[i].isd, &meshes[i].indexBuffer);
+        std::cout << meshes[i].vertexBufferDesc.BindFlags << std::endl;
+
+        result = m_device->CreateBuffer(&meshes[i].vertexBufferDesc, &meshes[i].vertexData, &meshes[i].vertexBuffer);
+        result = m_device->CreateBuffer(&meshes[i].ibd, &meshes[i].isd, &meshes[i].indexBuffer);
 
         delete[] vertexBuffer;
         delete[] indexBuffer;
     }
 }
-/*
-std::vector<Model::S_Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName)
-{
-    std::vector<S_Texture> textures;
+
+MaterialManager::Material Model::setMaterial(aiMaterial* mat, aiTextureType type, std::string typeName, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+
+    //std::vector<S_Texture> textures;
     std::string filePath;
-    //std::cout << mat->GetTextureCount(type) << std::endl;
-    for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
-    {
-        aiString str;
-        
-        mat->GetTexture(type, i, &str);
-
-        std::string fileName = std::string(str.C_Str());
-        fileName = directory + "/" + fileName;
-        filePath = fileName;
-
-        // check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
-        bool skip = false;
-        
-        for (unsigned int j = 0; j < textures_loaded.size(); j++)
-        {
-            if (std::strcmp(textures_loaded[j].path, filePath.c_str()) == 0)
-            {
-                textures.push_back(textures_loaded[j]);
-                skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
-                break;
-            }
-        }
-        
-        if (!skip)
-        {   // if texture hasn't been loaded already, load it
-            S_Texture texture;
-            //std::cout << fileName.c_str() << std::endl;
-            texture.path = fileName.c_str();
-            textures.push_back(texture);
-            textures_loaded.push_back(texture);  // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
+    //aiGetMaterialString(mat, AI_MATKEY_TEXTURE(type, 0), &path);
+    /*
+    aiString str;
+    aiReturn aRet = mat->GetTexture(type, 0, &str);
+    if (aRet == aiReturn_FAILURE) {
+        //std::cout << "Assimp failed to get the texture from this mesh" << std::endl;
+    }
+    */
+    std::string fileName = std::string(mat->GetName().C_Str());
+    
+    std::cout << "Diffuse File Name: " + fileName << std::endl;
+    //fileName = directory + "/" + fileName;
+    filePath = fileName;
+    //if(filePath != "")
+    //texture = new Texture(fileName.c_str(), m_device, m_deviceContext);
+    for (int i = 0; i < matManager.materials.size(); i++) {
+        if (matManager.materials[i].name == fileName.c_str()) {
+            MaterialManager::Material tmpMat;
+            tmpMat.name = matManager.materials[i].name;
+            return tmpMat;
         }
     }
-    return textures;
 }
-*/

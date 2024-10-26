@@ -1,54 +1,83 @@
-struct VS_CONTROL_POINT_OUTPUT
+cbuffer MatrixBuffer
 {
-	float3 vPosition : Position;
+	matrix worldMatrix;
+	matrix viewMatrix;
+	matrix projectionMatrix;
+	float3 cameraPosition;
+};
+
+struct HullInputType
+{
+	float3 position : POSITION;
 	float3 normal : NORMAL;
-	float2 uv: UV;
+	float2 uv : UV;
 };
 
-struct HS_CONTROL_POINT_OUTPUT
+struct ConstantOutputType
 {
-	float3 vPosition : Position; 
+	float edges[3] : SV_TessFactor;
+	float inside : SV_InsideTessFactor;
+};
+
+struct HullOutputType
+{
+	float3 position : POSITION;
 	float3 normal : NORMAL;
-	float2 uv: UV;
+	float2 uv : UV;
 };
 
-struct HS_CONSTANT_DATA_OUTPUT
+float ScaleByDistance(float3 pos1, float3 pos2)
 {
-	float EdgeTessFactor[3]			: SV_TessFactor;
-	float InsideTessFactor			: SV_InsideTessFactor;
-};
+	float minValue = 1;
+	float maxValue = 16;
+	float fdistance = distance(pos1, pos2);
+	float maxDistance = 30.0;
 
-#define NUM_CONTROL_POINTS 3
+	fdistance = clamp(fdistance, 0.0, maxDistance);
 
-HS_CONSTANT_DATA_OUTPUT CalcHSPatchConstants(
-	InputPatch<VS_CONTROL_POINT_OUTPUT, NUM_CONTROL_POINTS> ip,
-	uint PatchID : SV_PrimitiveID)
-{
-	HS_CONSTANT_DATA_OUTPUT Output;
+	
 
-	Output.EdgeTessFactor[0] = 
-		Output.EdgeTessFactor[1] = 
-		Output.EdgeTessFactor[2] = 
-		Output.InsideTessFactor = 15;
+	float scaledValue = lerp(maxValue, minValue, fdistance / maxDistance);
 
-	return Output;
+	return scaledValue;
 }
+
+ConstantOutputType ColorPatchConstantFunction(InputPatch<HullInputType, 3> inputPatch, uint patchId : SV_PrimitiveID)
+{
+	ConstantOutputType output;
+
+	float tessellationAmount = 8;
+
+	// Set the tessellation factors for the three edges of the triangle.
+	output.edges[0] = ScaleByDistance(inputPatch[0].position, cameraPosition);
+	output.edges[1] = ScaleByDistance(inputPatch[0].position, cameraPosition);
+	output.edges[2] = ScaleByDistance(inputPatch[0].position, cameraPosition);
+
+	// Set the tessellation factor for tessallating inside the triangle.
+	output.inside = ScaleByDistance(inputPatch[0].position, cameraPosition);
+
+	return output;
+}
+
 
 [domain("tri")]
 [partitioning("fractional_odd")]
 [outputtopology("triangle_cw")]
 [outputcontrolpoints(3)]
-[patchconstantfunc("CalcHSPatchConstants")]
-HS_CONTROL_POINT_OUTPUT main( 
-	InputPatch<VS_CONTROL_POINT_OUTPUT, NUM_CONTROL_POINTS> ip, 
-	uint i : SV_OutputControlPointID,
-	uint PatchID : SV_PrimitiveID )
+[patchconstantfunc("ColorPatchConstantFunction")]
+
+HullOutputType ColorHullShader(InputPatch<HullInputType, 3> patch, uint pointId : SV_OutputControlPointID, uint patchId : SV_PrimitiveID)
 {
-	HS_CONTROL_POINT_OUTPUT Output;
+	HullOutputType output;
 
-	Output.vPosition = ip[i].vPosition;
-	Output.normal = ip[i].normal;
-	Output.uv = ip[i].uv;
 
-	return Output;
+	// Set the position for this control point as the output position.
+	output.position = patch[pointId].position;
+
+	// Set the input color as the output color.
+	output.normal = patch[pointId].normal;
+
+	output.uv = patch[pointId].uv;
+
+	return output;
 }

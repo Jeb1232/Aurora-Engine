@@ -12,7 +12,10 @@ int main(int argc, char* argv[])
 	//AudioSource source(device.device, device.context);
 	//source.listener = listener;
 	Renderer renderer;
-	//source.play("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/sewer_air1.wav");
+	Scene scene;
+	renderer.SetActiveScene(&scene);
+
+	//source.play("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/music.ogg");
 	//source.looping = true;
 	renderer.CreateRenderWindow(1280, 720, false);
 	while (!renderer.finishedRendering);

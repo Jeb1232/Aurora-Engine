@@ -35,7 +35,7 @@ void AssetPacker::CreatePackage(std::ofstream& pakFile, const std::string& baseP
             fileCount++;
         }
     }
-    m_Header.encryptValue = 53;
+    //m_Header.encryptValue = 53;
     m_Header.numOfEntries = fileCount;
 
     pakFile.write(reinterpret_cast<char*>(&m_Header), sizeof(FileHeader));
@@ -247,7 +247,7 @@ AssetPacker::LoadedFile AssetPacker::LoadFileFromPackage(const std::string& pakF
     }
 
     if (loadedFile.fileName == "placeholder") {
-        std::cout << "File not found in this pak file." << std::endl;
+        std::cout << "File " + fileName + " not found in this pak file." << std::endl;
         pakFile.close();
         delete[] fileTableEntry;
         return loadedFile;

@@ -13,15 +13,20 @@ Texture2D specularT;
 SamplerState sSampler;
 
 cbuffer Light {
-    float3 direction;
+    float4 position;
+    float4 direction;
+    float4 lightColor;
+    float4 ambientColor;
+    float3 padding;
+    float intensity;
     //float3 camPos;
 };
 
 float4 main(Input input) : SV_TARGET
 {
-    float3 ambientC = float3(0.01f, 0.01f, 0.01f);
-    float3 diffuseC = float3(0.5f, 0.5f, 0.5f);
-    float3 specularC = float3(1.0f, 1.0f, 1.0f);
+    float3 ambientC = float3(ambientColor.x, ambientColor.y, ambientColor.z);
+    float3 diffuseC = float3(lightColor.x, lightColor.y, lightColor.z);
+    float3 specularC = float3(lightColor.x, lightColor.y, lightColor.z);;
 	float4 color = diffuseT.Sample(dSampler, input.uv);
     float4 specT = specularT.Sample(sSampler, input.uv);
 
@@ -34,7 +39,7 @@ float4 main(Input input) : SV_TARGET
     // diffuse 
     float3 norm = normalize(input.normal);
     //float3 lightDir = normalize(direction - input.position);
-    float3 lightDir = normalize(-direction);
+    float3 lightDir = normalize(position - input.worldPos);
     float diff = saturate(dot(norm, lightDir));
     float3 diffuse = diffuseC * diff;
 
@@ -47,9 +52,11 @@ float4 main(Input input) : SV_TARGET
     float spec = pow(saturate(dot(halfwayDir, norm)), 128);
     float3 specular = specularC * spec * specT.xyz;
     
+    float distance = length(position - input.worldPos);
+    float attenuation = 1.0 / (1.0f + 0.35f * distance + 0.44 * (distance * distance));
 
-    float3 lightColor = (ambient + diffuse + specular);
+    float3 LightColor = (ambient + diffuse * attenuation + specular * attenuation);
 
-	return float4(color * lightColor, 1.0f);
+	return float4(color * (LightColor * intensity), 1.0f);
 	//return float4(input.uv.x,input.uv.y,0.0f,1.0f);
 }

@@ -54,6 +54,21 @@
     <ClInclude Include="Engine\renderer\Light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\renderer\Shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\scene\Entity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\scene\Scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\renderer\Terrain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\renderer\MaterialManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\renderer\Renderer.cpp">
@@ -80,11 +95,31 @@
     <ClCompile Include="Engine\renderer\Light.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\renderer\Shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\scene\Entity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\scene\Scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\renderer\Terrain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\renderer\MaterialManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Engine\renderer\shaders\vertexShader.hlsl" />
     <FxCompile Include="Engine\renderer\shaders\pixelShader.hlsl" />
-    <FxCompile Include="Engine\renderer\shaders\tessellationHullShader.hlsl" />
     <FxCompile Include="Engine\renderer\shaders\tessellationDomainShader.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\tessellationHullShader.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\tessellationVertexShader.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\tessellationPixelShader.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\PostProcessingVertexShader.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\skyboxVertexShader.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\skyboxPixelShader.hlsl" />
   </ItemGroup>
 </Project>

@@ -32,7 +32,7 @@ Texture::Texture(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* 
 		stbi_image_free(ImageData);
 		return;
 	}
-
+	std::cout << ImageWidth + " " + ImageHeight << std::endl;
 	free(lFile.data);
 
 	// Texture
@@ -100,7 +100,7 @@ Texture::Texture(std::vector<const char*> paths, ID3D11Device* m_device, ID3D11D
 	ImageShaderResourceView = nullptr;
 	ImageSamplerState = nullptr;
 
-	stbi_set_flip_vertically_on_load(true);
+	stbi_set_flip_vertically_on_load(false);
 
 	AssetPacker packer;
 	std::vector<AssetPacker::LoadedFile> lFiles;
@@ -114,6 +114,8 @@ Texture::Texture(std::vector<const char*> paths, ID3D11Device* m_device, ID3D11D
 	std::vector<LoadedImage> images;
 
 	for (int i = 0; i < 6; i++) {
+		LoadedImage tmplImage;
+		images.push_back(tmplImage);
 		images[i].data = stbi_load_from_memory(lFiles[i].data, lFiles[i].fileSize,
 			&images[i].ImageWidth,
 			&images[i].ImageHeight,
@@ -136,7 +138,7 @@ Texture::Texture(std::vector<const char*> paths, ID3D11Device* m_device, ID3D11D
 	ImageTextureDesc.Height = images[0].ImageHeight;
 	ImageTextureDesc.MipLevels = 1;
 	ImageTextureDesc.ArraySize = 6;
-	ImageTextureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	ImageTextureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	ImageTextureDesc.SampleDesc.Count = 1;
 	ImageTextureDesc.SampleDesc.Quality = 0;
 	ImageTextureDesc.Usage = D3D11_USAGE_DEFAULT;
