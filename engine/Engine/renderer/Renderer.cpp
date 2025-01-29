@@ -2,7 +2,7 @@
 #include"Texture.h"
 #include"../scene/Entity.h"
 
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(10.0f, -1.8f, 0.0f));
 float deltaTime = 0;
 class com_exception : public std::exception
 {
@@ -27,7 +27,7 @@ void Renderer::ThrowIfFailed(HRESULT hr)
     {
         // Set a breakpoint on this line to catch Win32 API errors.
         //std::cout << com_exception(hr).what() << std::endl;
-        MessageBox(hWindow, com_exception(hr).what(), "Engine Error", MB_ICONWARNING | MB_OK);
+        MessageBox(hWindow, com_exception(hr).what(), "Engine Error", MB_ICONERROR | MB_OK);
     }
 }
 
@@ -56,9 +56,6 @@ void Renderer::InitRenderer(int width, int height, HWND hWnd)
     swapChainDesc.Windowed = true;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
-
-
-
     UINT createDeviceFlags = 0;
 
     createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -66,12 +63,55 @@ void Renderer::InitRenderer(int width, int height, HWND hWnd)
     HRESULT result = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevels, 1, D3D11_SDK_VERSION, &swapChainDesc, &m_swapChain, &m_device, &featureLevel, &m_deviceContext);
     ThrowIfFailed(result);
 
+    D3D11_TEXTURE2D_DESC texDesc;
+    //ZeroMemory(&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
+    //DXGI_FORMAT_R16G16B16A16_FLOAT
+    texDesc.Width = width;
+    texDesc.Height = height;
+    texDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+    texDesc.Usage = D3D11_USAGE_DEFAULT;
+    texDesc.SampleDesc.Count = 1;
+    texDesc.SampleDesc.Quality = 0;
+    texDesc.CPUAccessFlags = 0;
+    texDesc.ArraySize = 1;
+    texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+    texDesc.MiscFlags = 0;
+    texDesc.MipLevels = 1;
+    m_device->CreateTexture2D(&texDesc, nullptr, &m_renderTexture);
+    m_device->CreateTexture2D(&texDesc, nullptr, &m_renderTexture2);
+    //m_device->CreateTexture2D(&texDesc, nullptr, &m_backBuffer);
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+    srvDesc.Format = texDesc.Format;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.MipLevels = 1;
+
+    m_device->CreateShaderResourceView(m_renderTexture, &srvDesc, &m_rtSRV);
+
+    D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+    renderTargetViewDesc.Format = texDesc.Format;
+    renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    renderTargetViewDesc.Texture2D.MipSlice = 0;
+
+    D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc2;
+    renderTargetViewDesc2.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    renderTargetViewDesc2.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    renderTargetViewDesc2.Texture2D.MipSlice = 0;
+
+    m_device->CreateRenderTargetView(m_renderTexture2, &renderTargetViewDesc, &m_renderTargetView);
+    //m_device->CreateRenderTargetView(m_backBuffer, &renderTargetViewDesc, &m_renderTargetView);
+    //m_device->CreateRenderTargetView(m_backBuffer, &renderTargetViewDesc2, &m_renderTargetView2);
+
+    //m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&m_backBuffer);
+
     m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&m_backBuffer);
 
-    m_device->CreateRenderTargetView(m_backBuffer, nullptr, &m_renderTargetView);
+    m_device->CreateRenderTargetView(m_backBuffer, nullptr, &m_renderTargetView2);
 
     D3D11_DEPTH_STENCIL_DESC dsDesc = {};
     dsDesc.DepthEnable = TRUE;
+    dsDesc.StencilEnable = FALSE;
     dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
     dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
     ID3D11DepthStencilState* pDSState;
@@ -83,18 +123,71 @@ void Renderer::InitRenderer(int width, int height, HWND hWnd)
     descDepth.Height = height;
     descDepth.MipLevels = 1u;
     descDepth.ArraySize = 1u;
-    descDepth.Format = DXGI_FORMAT_D32_FLOAT;
-    descDepth.SampleDesc.Count = 1u;
-    descDepth.SampleDesc.Quality = 0u;
+    descDepth.Format = DXGI_FORMAT_R32_TYPELESS;
+    descDepth.SampleDesc.Count = 1;
+    descDepth.SampleDesc.Quality = 0;
     descDepth.Usage = D3D11_USAGE_DEFAULT;
-    descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
     m_device->CreateTexture2D(&descDepth, nullptr, &m_depthBuffer);
+    m_device->CreateTexture2D(&descDepth, nullptr, &m_depthTexture);
+    
+    D3D11_TEXTURE2D_DESC shadowMapDesc;
+    //ZeroMemory(&shadowMapDesc, sizeof(D3D11_TEXTURE2D_DESC));
+    shadowMapDesc.Width = 1024;
+    shadowMapDesc.Height = 1024;
+    shadowMapDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+    shadowMapDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+    shadowMapDesc.ArraySize = 1;
+    shadowMapDesc.MipLevels = 1;
+    shadowMapDesc.CPUAccessFlags = 0;
+    shadowMapDesc.MiscFlags = 0;
+    shadowMapDesc.SampleDesc.Count = 1;
+    shadowMapDesc.SampleDesc.Quality = 0;
+    shadowMapDesc.Usage = D3D11_USAGE_DEFAULT;
+
+    //creating a texture
+    m_device->CreateTexture2D(&shadowMapDesc, nullptr, &m_shadowMap);
+
+    //creating a texture
+    //m_device->CreateTexture2D(&shadowMapDesc, nullptr, &m_shadowMap2);
+    //std::cout << sizeof(glm::vec3) << std::endl;
+    //description for depth stencil view
 
     D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
     descDSV.Format = DXGI_FORMAT_D32_FLOAT;
     descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
     descDSV.Texture2D.MipSlice = 0u;
     m_device->CreateDepthStencilView(m_depthBuffer, &descDSV, &m_depthStencilView);
+
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC depthSRVDesc;
+    //ZeroMemory(&shadowSRVDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+    depthSRVDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    depthSRVDesc.Texture2D.MipLevels = 1;
+    depthSRVDesc.Texture2D.MostDetailedMip = 0;
+    depthSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+
+    m_device->CreateShaderResourceView(m_depthTexture, &depthSRVDesc, &m_depthSRV);
+
+    D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+    ZeroMemory(&depthStencilViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+    depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    depthStencilViewDesc.Texture2D.MipSlice = 0;
+    depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+
+    if (FAILED(m_device->CreateDepthStencilView(m_shadowMap, &depthStencilViewDesc, &m_shadowDepthStencilView))) {
+        MessageBox(hWindow, "Failed to create shadow depth buffer!", "Engine Error", MB_ICONWARNING | MB_OK);
+    }
+
+    //creating a shader resource view
+    D3D11_SHADER_RESOURCE_VIEW_DESC shadowSRVDesc;
+    //ZeroMemory(&shadowSRVDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+    shadowSRVDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    shadowSRVDesc.Texture2D.MipLevels = 1;
+    shadowSRVDesc.Texture2D.MostDetailedMip = 0;
+    shadowSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+
+    m_device->CreateShaderResourceView(m_shadowMap, &shadowSRVDesc, &m_shadowSRV);
 
     m_deviceContext->OMSetRenderTargets(1u, &m_renderTargetView, m_depthStencilView);
     
@@ -105,11 +198,34 @@ void Renderer::InitRenderer(int width, int height, HWND hWnd)
 
 float timeAng = 0;
 
+void RenderShadows() {
+
+}
+
 void Renderer::RenderLoop(int width, int height)
 {
     if (!init) { return; }
+    /*
+    cPhysicsSystem physicsSystem;
+    JPH::BoxShapeSettings floor_shape_settings(JPH::Vec3(100.0f, 1.0f, 100.0f));
+    floor_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
+
+    // Create the shape
+    JPH::ShapeSettings::ShapeResult floor_shape_result = floor_shape_settings.Create();
+    JPH::ShapeRefC floor_shape = floor_shape_result.Get(); // We don't expect an error here, but you can check floor_shape_result for HasError() / GetError()
+
+    // Create the settings for the body itself. Note that here you can also set other properties like the restitution / friction.
+    JPH::BodyCreationSettings floor_settings(floor_shape, JPH::RVec3(0.0f, -1.0f, 0.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Static, Layers::NON_MOVING);
+    JPH::BodyCreationSettings sphere_settings(new JPH::SphereShape(0.5f), JPH::RVec3(0.0F, 2.0f, 0.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
 
 
+    Rigidbody planeBody(floor_settings);
+    Rigidbody sphereBody(sphere_settings);
+
+
+    physicsSystem.AddRigidbody(planeBody);
+    physicsSystem.AddRigidbody(sphereBody);
+    */
     MaterialManager matManager;
 
     MaterialManager::Material mat_1;
@@ -132,43 +248,60 @@ void Renderer::RenderLoop(int width, int height)
 
     ID3D11VertexShader* skyVertexShader = nullptr;
     ID3D11PixelShader* skyPixelShader = nullptr;
+    ID3D11VertexShader* ppVertexShader = nullptr;
+    ID3D11PixelShader* ppPixelShader = nullptr;
+    ID3D11VertexShader* shadowVertexShader = nullptr;
     
-
-    Entity map0("map0", Entity::EntityType::MODEL);
-    Entity map("map", Entity::EntityType::MODEL);
     Entity entity2("Thing", Entity::EntityType::MODEL);
+    Entity Bistro("Bistro", Entity::EntityType::MODEL);
     Entity skyCube("Skybox", Entity::EntityType::MODEL);
+    Entity mask("maskman", Entity::EntityType::MODEL);
+    Entity quad("quad", Entity::EntityType::MODEL);
     ID3DBlob* vsBlob;
+    ID3DBlob* SvsBlob;
     ID3DBlob* hsBlob;
     ID3DBlob* dsBlob;
     ID3DBlob* psBlob;
     ID3DBlob* skyVS;
     ID3DBlob* skyPS;
-    map0.matManager = matManager;
-    map.matManager = matManager;
+    ID3DBlob* ppVS;
+    ID3DBlob* ppPS;
     skyCube.matManager = matManager;
-    map0.model.matManager = matManager;
-    map.model.matManager = matManager;
     skyCube.model.matManager = matManager;
-    map0.model.LoadModelFromPAK("map0.obj", m_device, m_deviceContext);
-    map.model.LoadModelFromPAK("map.obj", m_device, m_deviceContext);
+    //map0.model.LoadModelFromPAK("map0.obj", m_device, m_deviceContext);
+    entity2.model.LoadModelFromPAK("50x50Plane.obj", m_device, m_deviceContext);
+    mask.model.LoadModelFromPAK("mental.obj", m_device, m_deviceContext);
+    quad.model.LoadModelFromPAK("quad2.obj", m_device, m_deviceContext);
+    Bistro.model.LoadModel("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/BistroExterior.fbx", m_device, m_deviceContext);
+    Bistro.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    Bistro.setRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
+    Bistro.setScale(glm::vec3(0.01f, 0.01f, 0.01f));
+    Bistro.useMaterials = true;
     skyCube.model.LoadModelFromPAK("cube.obj", m_device, m_deviceContext);
     skyCube.model.loadMaterials = false;
-    currentActiveScene->AddEntity(&map0);
-    currentActiveScene->AddEntity(&map);
+    //currentActiveScene->AddEntity(&entity2);
+    //currentActiveScene->AddEntity(&mask);
+    currentActiveScene->AddEntity(&Bistro);
     //currentActiveScene->AddEntity(&skyCube);
-
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/vertexShader.cso", &vsBlob);
+
+    D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/ShadowVertexShader.cso", &SvsBlob);
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/tessellationHullShader.cso", &hsBlob);
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/tessellationDomainShader.cso", &dsBlob);
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/pixelShader.cso", &psBlob);
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/skyboxVertexShader.cso", &skyVS);
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/skyboxPixelShader.cso", &skyPS);
+    D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/PPvertexShader.cso", &ppVS);
+    D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/PPpixelShader.cso", &ppPS);
 
     m_device->CreateVertexShader(skyVS->GetBufferPointer(), skyVS->GetBufferSize(), nullptr, &skyVertexShader);
     m_device->CreatePixelShader(skyPS->GetBufferPointer(), skyPS->GetBufferSize(), nullptr, &skyPixelShader);
 
+    m_device->CreateVertexShader(ppVS->GetBufferPointer(), ppVS->GetBufferSize(), nullptr, &ppVertexShader);
+    m_device->CreatePixelShader(ppPS->GetBufferPointer(), ppPS->GetBufferSize(), nullptr, &ppPixelShader);
+
     m_device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader);
+    m_device->CreateVertexShader(SvsBlob->GetBufferPointer(), SvsBlob->GetBufferSize(), nullptr, &shadowVertexShader);
     m_device->CreateHullShader(hsBlob->GetBufferPointer(), hsBlob->GetBufferSize(), nullptr, &hullShader);
     m_device->CreateDomainShader(dsBlob->GetBufferPointer(), dsBlob->GetBufferSize(), nullptr, &domainShader);
     m_device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
@@ -178,28 +311,57 @@ void Renderer::RenderLoop(int width, int height)
         {"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA},
         {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
         {"UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        //{"TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    };
+    D3D11_INPUT_ELEMENT_DESC layout2[] = {
+        {"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA},
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+    };
+    D3D11_INPUT_ELEMENT_DESC pplayout[] = {
+        {"Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA},
+        {"UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
     m_device->CreateInputLayout(layout, 3, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &inputLayout);
-    m_device->CreateInputLayout(layout, 3, skyVS->GetBufferPointer(), skyVS->GetBufferSize(), &skyboxInputLayout);
-
+    m_device->CreateInputLayout(layout2, 3, skyVS->GetBufferPointer(), skyVS->GetBufferSize(), &skyboxInputLayout);
+    m_device->CreateInputLayout(pplayout, 2, ppVS->GetBufferPointer(), ppVS->GetBufferSize(), &ppinputLayout);
     
+    ID3D11SamplerState* ImageSamplerState = nullptr;
+    D3D11_SAMPLER_DESC ImageSamplerDesc = {};
+
+    ImageSamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    ImageSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    ImageSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    ImageSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    ImageSamplerDesc.MipLODBias = 0.0f;
+    ImageSamplerDesc.MaxAnisotropy = 1;
+    ImageSamplerDesc.ComparisonFunc = D3D11_COMPARISON_LESS;
+    ImageSamplerDesc.MinLOD = -FLT_MAX;
+    ImageSamplerDesc.MaxLOD = FLT_MAX;
+
+    m_device->CreateSamplerState(&ImageSamplerDesc,
+        &ImageSamplerState);
 
     SetD3DStates();
 
-    auto viewport = CD3D11_VIEWPORT(0.0f, 0.0f, (float)width, (float)height,0,1);
+    auto viewport = CD3D11_VIEWPORT(0.0f, 0.0f, (float)width, (float)height,0.0f,1.0f);
+    auto shadowViewport = CD3D11_VIEWPORT(0.0f, 0.0f, (float)1024, (float)1024, 0.0f, 1.0f);
     m_deviceContext->RSSetViewports(1, &viewport);
 
     std::vector<const char*> skyFaces;
-    skyFaces.push_back("posx.jpg");
-    skyFaces.push_back("negx.jpg");
-    skyFaces.push_back("posy.jpg");
-    skyFaces.push_back("negy.jpg");
-    skyFaces.push_back("posz.jpg");
-    skyFaces.push_back("negz.jpg");
+    skyFaces.push_back("sky_wasteland02lf.png");
+    skyFaces.push_back("sky_wasteland02rt.png");
+    skyFaces.push_back("sky_wasteland02up.png");
+    skyFaces.push_back("sky_wasteland02dn.png");
+    skyFaces.push_back("sky_wasteland02ft.png");
+    skyFaces.push_back("sky_wasteland02bk.png");
 
-    Texture* diffuse = new Texture("brickwall.jpg", m_device, m_deviceContext);
+    Texture* albedo = new Texture("rustdiffuse.jpg", m_device, m_deviceContext);
+    Texture* roughness = new Texture("rustspec.jpg", m_device, m_deviceContext);
+    Texture* normal = new Texture("TilesNormal.jpg", m_device, m_deviceContext);
+    Texture* ao = new Texture("TilesAO.jpg", m_device, m_deviceContext);
     Texture* heightMap = new Texture("Terrain005_4K.png", m_device, m_deviceContext);
-    Texture* specular = new Texture("white.jpg", m_device, m_deviceContext);
+    Texture* specular = new Texture("rustspec.jpg", m_device, m_deviceContext);
     Texture* skybox = new Texture(skyFaces, m_device, m_deviceContext);
     //Texture* textures = { {"diffuse.jpg", m_device, m_deviceContext},{"specular.jpg", m_device, m_deviceContext} };
     //textures[0] = diffuse;
@@ -211,6 +373,11 @@ void Renderer::RenderLoop(int width, int height)
     glm::mat4 model = glm::mat4(1.0f);	// make sure to initialize matrix to identity matrix first
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 projection = glm::mat4(1.0f);
+    glm::mat4 prevProjection = glm::mat4(1.0f);
+    glm::mat4 objectMatrix = glm::mat4(1.0f);
+    glm::mat4 lightView = glm::mat4(1.0f);
+    glm::mat4 lightProjection = glm::mat4(1.0f);
+    glm::mat4 lightSpaceMatrix = glm::mat4(1.0f);
     float radius = 10.0f;
 
     Uint64 NOW = SDL_GetPerformanceCounter();
@@ -219,9 +386,14 @@ void Renderer::RenderLoop(int width, int height)
     //Texture* tex = nullptr;
     //std::vector<Texture*> loaded_tex;
     //diffuse->ImageShaderResourceView
-    
-    m_deviceContext->PSSetShaderResources(0, 1, &diffuse->ImageShaderResourceView);
-    m_deviceContext->PSSetSamplers(0, 1, &diffuse->ImageSamplerState);
+    //m_rtSRV
+    m_deviceContext->PSSetShaderResources(0, 1, &albedo->ImageShaderResourceView);
+    m_deviceContext->PSSetShaderResources(1, 1, &roughness->ImageShaderResourceView);
+    m_deviceContext->PSSetShaderResources(3, 1, &normal->ImageShaderResourceView);
+    m_deviceContext->PSSetShaderResources(4, 1, &ao->ImageShaderResourceView);
+    m_deviceContext->PSSetSamplers(0, 1, &albedo->ImageSamplerState);
+
+
 
     m_deviceContext->PSSetShaderResources(20, 1, &skybox->ImageShaderResourceView);
     m_deviceContext->PSSetSamplers(15, 1, &skybox->ImageSamplerState);
@@ -235,6 +407,8 @@ void Renderer::RenderLoop(int width, int height)
     {
         SDLInput();
 
+        m_deviceContext->OMSetRenderTargets(1u, &m_renderTargetView, m_depthStencilView);
+
         m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColor);
         m_deviceContext->RSSetState(m_rasterizerState);
         m_deviceContext->OMSetBlendState(m_blendState, NULL, 0xffffffff);
@@ -243,18 +417,19 @@ void Renderer::RenderLoop(int width, int height)
         float camX = std::sin(tme) * radius;
         float camZ = std::cos(tme) * radius;
         //view = glm::lookAtRH(glm::vec3(camX, 1.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::vec3 lightDir = camera.Position + glm::vec3(0.0f, -1.0f, 0.5f);
         view = camera.GetViewMatrix();
+        //view = glm::lookAt(glm::vec3(4.0f, -1.0f, 0.5f), lightDir, glm::vec3(0, 1, 0));
         projection = glm::perspectiveRH_ZO(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 10000.0f);
-
+        //projection = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, 0.1f, 10000.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-
-
         ConstantBuffer scb = {
         model,
-        glm::mat4(glm::mat3(camera.GetViewMatrix())),
+        glm::mat4(glm::mat3(view)),
         projection,
+        lightSpaceMatrix,
         camera.Position
         };
 
@@ -286,26 +461,109 @@ void Renderer::RenderLoop(int width, int height)
 
         //m_deviceContext->DSSetShaderResources(0, 1, &heightMap->ImageShaderResourceView);
         //m_deviceContext->DSSetSamplers(0, 1, &heightMap->ImageSamplerState);
-        map0.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-        map0.setScale(glm::vec3(0.5f, 0.5f, 0.5f));
-        map.setPosition(glm::vec3(4.0f, -1.0f, 3.5f));
-        map.setRotation(glm::vec3(0.0f, 180.0f, 0.0f));
-        map.setScale(glm::vec3(0.5f, 0.5f, 0.5f));
         //entity.UpdateMatrixes(view, projection);
-
+        //mask.setPosition(glm::vec3(sphereBody.position.GetX(), sphereBody.position.GetY(), sphereBody.position.GetZ()));
+        //mask.setRotation(glm::vec3(sphereBody.rotation.GetX(), sphereBody.rotation.GetY(), sphereBody.rotation.GetZ()));
         Light playerLight;
+        m_deviceContext->OMSetRenderTargets(0, nullptr, m_shadowDepthStencilView);
+        m_deviceContext->RSSetViewports(1, &shadowViewport);
+        m_deviceContext->ClearDepthStencilView(m_shadowDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+        //glm::vec3(4.0f, -1.0f, 0.5f)
 
+        lightView = glm::lookAt(camera.Position, lightDir, glm::vec3(0, 1, 0));
+        lightProjection = glm::orthoLH_ZO(-20.0f, 20.0f, -20.0f, 20.0f, 1.0f, 100.0f);
+        
+        lightSpaceMatrix = lightProjection * lightView;
+        for (int i = 0; i < currentActiveScene->sceneObjects.size(); i++) {
+            currentActiveScene->sceneObjects[i]->UpdateMatrixes(lightView, lightProjection, camera.Position);
+
+            SconstantBuffer cb = {
+                currentActiveScene->sceneObjects[i]->Matmodel,
+                lightView,
+                lightProjection
+            };
+
+            ID3D11Buffer* constantBuffer;
+            D3D11_BUFFER_DESC cbd;
+            cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+            cbd.Usage = D3D11_USAGE_DYNAMIC;
+            cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+            cbd.MiscFlags = 0u;
+            cbd.ByteWidth = sizeof(cb);
+            cbd.StructureByteStride = 0u;
+            D3D11_SUBRESOURCE_DATA csd = {};
+            csd.pSysMem = &cb;
+
+            m_device->CreateBuffer(&cbd, &csd, &constantBuffer);
+            m_deviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
+            //m_deviceContext->DSSetConstantBuffers(0, 1, &constantBuffer);
+            //m_deviceContext->HSSetConstantBuffers(0, 1, &constantBuffer);
+
+
+            //playerLight.setPosition(glm::vec3(4.0f, -1.0f, 0.5f));
+            //playerLight.setRotation(glm::vec3(0.0f, -1.0f, 0.5f));
+            //playerLight.setLightColor(glm::vec3(1.0f, 1.0f, 1.0f));
+            //playerLight.setAmbientColor(glm::vec3(0.1f, 0.1f, 0.1f));
+            //playerLight.intensity = 1;
+            //playerLight.UpdateLightBuffer(m_device, m_deviceContext);
+
+
+            //m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0u);
+            //D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST
+            //D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+            //m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+
+            m_deviceContext->IASetInputLayout(inputLayout);
+            m_deviceContext->VSSetShader(shadowVertexShader, nullptr, 0);
+            //m_deviceContext->HSSetShader(hullShader, nullptr, 0);
+            //m_deviceContext->DSSetShader(domainShader, nullptr, 0);
+            m_deviceContext->PSSetShader(nullptr, nullptr, 0);
+            //Rendering stuff under this
+            //currentActiveScene->sceneObjects[i]->model.GetClosestVertex(camera.Position)
+            currentActiveScene->sceneObjects[i]->Update();
+            currentActiveScene->sceneObjects[i]->DrawModel(m_deviceContext, m_device);
+        }
+        m_deviceContext->RSSetViewports(1, &viewport);
+        m_deviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+        m_deviceContext->OMSetRenderTargets(1u, &m_renderTargetView, m_depthStencilView);
         m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+        view = camera.GetViewMatrix();
+        projection = glm::perspectiveRH_ZO(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 10000.0f);
+
+        //m_deviceContext->CopyResource(m_shadowMap2, m_shadowMap);
+        ID3D11SamplerState* ImageSamplerState2 = nullptr;
+        D3D11_SAMPLER_DESC ImageSamplerDesc2 = {};
+        ImageSamplerDesc2.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+        ImageSamplerDesc2.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+        ImageSamplerDesc2.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+        ImageSamplerDesc2.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+        ImageSamplerDesc2.MipLODBias = 0.0f;
+        ImageSamplerDesc2.MaxAnisotropy = 1;
+        ImageSamplerDesc2.BorderColor[0] = 0;
+        ImageSamplerDesc2.BorderColor[1] = 0;
+        ImageSamplerDesc2.BorderColor[2] = 0;
+        ImageSamplerDesc2.BorderColor[3] = 0;
+        ImageSamplerDesc2.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+        ImageSamplerDesc2.MinLOD = 0;
+        ImageSamplerDesc2.MaxLOD = D3D11_FLOAT32_MAX;
+
+        m_device->CreateSamplerState(&ImageSamplerDesc2,
+            &ImageSamplerState2);
+
+        m_deviceContext->PSSetShaderResources(18, 1, &m_shadowSRV);
+        m_deviceContext->PSSetSamplers(13, 1, &ImageSamplerState2);
 
         for (int i = 0; i < currentActiveScene->sceneObjects.size(); i++) {
             currentActiveScene->sceneObjects[i]->UpdateMatrixes(view, projection, camera.Position);
 
-
-
+            //objectMatrix = currentActiveScene->sceneObjects[i]->Matmodel * view * projection;
+            //lightSpaceMatrix = lightProjection * lightView;
             ConstantBuffer cb = {
                 currentActiveScene->sceneObjects[i]->Matmodel,
                 view,
                 projection,
+                lightSpaceMatrix,
                 camera.Position
             };
 
@@ -327,9 +585,11 @@ void Renderer::RenderLoop(int width, int height)
             //m_deviceContext->HSSetConstantBuffers(0, 1, &constantBuffer);
 
 
-            playerLight.setPosition(camera.Position);
+            playerLight.setPosition(glm::vec3(4.0f, 1.0f, 0.5f));
+            playerLight.setRotation(glm::vec3(0.0f, -1.0f, 0.5f));
             playerLight.setLightColor(glm::vec3(1.0f, 1.0f, 1.0f));
-
+            playerLight.setAmbientColor(glm::vec3(0.1f, 0.1f, 0.1f));
+            playerLight.intensity = 1;
             playerLight.UpdateLightBuffer(m_device, m_deviceContext);
 
 
@@ -346,11 +606,78 @@ void Renderer::RenderLoop(int width, int height)
 
 
             //Rendering stuff under this
-
+            //currentActiveScene->sceneObjects[i]->model.GetClosestVertex(camera.Position)
             currentActiveScene->sceneObjects[i]->Update();
             currentActiveScene->sceneObjects[i]->DrawModel(m_deviceContext, m_device);
         }
+        
+        m_deviceContext->CopyResource(m_renderTexture, m_renderTexture2);
+        m_deviceContext->CopyResource(m_depthTexture, m_depthBuffer);
+        m_deviceContext->PSSetShaderResources(14, 1, &m_depthSRV);
+        m_deviceContext->PSSetShaderResources(15, 1, &m_rtSRV);
+        m_deviceContext->PSSetSamplers(14, 1, &albedo->ImageSamplerState);
+        
+        m_deviceContext->OMSetRenderTargets(1u, &m_renderTargetView2, m_depthStencilView);
+        float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+        -1.0f,  1.0f,  0.0f, 0.0f,
+        -1.0f, -1.0f,  0.0f, 1.0f,
+         1.0f, -1.0f,  1.0f, 1.0f,
 
+        -1.0f,  1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 1.0f,
+         1.0f,  1.0f,  1.0f, 0.0f
+        };
+      
+        m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+        ID3D11Buffer* vertexBuffer = nullptr;
+        D3D11_BUFFER_DESC vertexBufferDesc = {};
+        vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+        vertexBufferDesc.ByteWidth = sizeof(Vertex2) * static_cast<UINT>(6);
+        vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        vertexBufferDesc.CPUAccessFlags = 0u;
+        D3D11_SUBRESOURCE_DATA vertexData = { 0 };
+        vertexData.pSysMem = quadVertices;
+
+        m_device->CreateBuffer(&vertexBufferDesc, &vertexData, &vertexBuffer);
+
+        UINT stride = sizeof(Vertex2);
+        UINT offset = 0;
+        
+        PostProcessBuffer pcb = {
+            prevProjection,
+            (view * projection),
+            camera.Position,
+        };
+
+
+        ID3D11Buffer* pconstantBuffer;
+        D3D11_BUFFER_DESC pcbd;
+        pcbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        pcbd.Usage = D3D11_USAGE_DYNAMIC;
+        pcbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        pcbd.MiscFlags = 0u;
+        pcbd.ByteWidth = sizeof(pcb);
+        pcbd.StructureByteStride = 0u;
+        D3D11_SUBRESOURCE_DATA pcsd = {};
+        pcsd.pSysMem = &pcb;
+
+        m_device->CreateBuffer(&pcbd, &pcsd, &pconstantBuffer);
+        m_deviceContext->PSSetConstantBuffers(0, 1, &pconstantBuffer);
+        m_deviceContext->PSSetShaderResources(8, 1, &m_shadowSRV);
+
+        m_deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+        //m_deviceContext->IASetIndexBuffer(model.meshes[i].indexBuffer, DXGI_FORMAT_R16_UINT, 0u);
+        m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        m_deviceContext->IASetInputLayout(ppinputLayout);
+        //m_deviceContext->HSSetShader(nullptr, nullptr, 0);
+        //m_deviceContext->DSSetShader(nullptr, nullptr, 0);
+        m_deviceContext->VSSetShader(ppVertexShader, nullptr, 0);
+        m_deviceContext->PSSetShader(ppPixelShader, nullptr, 0);
+        //quad.DrawModel(m_deviceContext, m_device);
+        m_deviceContext->Draw(6, 0);
+        //prevProjection = (view * projection);
         m_swapChain->Present(1, 0);
 
         LAST = NOW;
@@ -358,8 +685,9 @@ void Renderer::RenderLoop(int width, int height)
 
         deltaTime = ((NOW - LAST) / (float)SDL_GetPerformanceFrequency());
         tme += deltaTime;
-        std::cout << 1.0f/deltaTime << '\n';
-        //constantBufferL->Release();
+        std::cout << 1.0f / deltaTime << '\n';
+        skyConstantBuffer->Release();
+        //vertexBuffer->Release();
     }
     //vertexBuffer->Release();
     vertexShader->Release();
@@ -377,7 +705,7 @@ void Renderer::SetD3DStates()
     auto rasterizerDesc = CD3D11_RASTERIZER_DESC(
         D3D11_FILL_SOLID,
         D3D11_CULL_NONE,
-        false,
+        true,
         0, 0, 0, 0,
         false, false, false);
     m_device->CreateRasterizerState(&rasterizerDesc, &m_rasterizerState);
@@ -481,6 +809,8 @@ void Renderer::EditorRenderLoop(int width, int height,  HWND hwnd) {
     glm::mat4 model = glm::mat4(1.0f);	// make sure to initialize matrix to identity matrix first
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 projection = glm::mat4(1.0f);
+    glm::mat4 objectMatrix = glm::mat4(1.0f);
+    glm::mat4 lightSpaceMatrix = glm::mat4(1.0f);
     float radius = 10.0f;
 
 
@@ -513,11 +843,12 @@ void Renderer::EditorRenderLoop(int width, int height,  HWND hwnd) {
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-
+        objectMatrix = model * view * projection;
         ConstantBuffer cb = {
             model,
-            view,
+            glm::mat4(glm::mat3(camera.GetViewMatrix())),
             projection,
+            lightSpaceMatrix,
             camera.Position
         };
 

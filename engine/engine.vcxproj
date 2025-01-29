@@ -146,7 +146,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>GLM_ENABLE_EXPERIMENTAL;JPH_ENABLE_ASSERTS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLM_ENABLE_EXPERIMENTAL;NDEBUG</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)/libraries/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -159,10 +159,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)/libraries/libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;d3d11.lib;dxgi.lib;d3dcompiler.lib;sndfile.lib;OpenAL32.lib;assimp-vc142-mt.lib;Jolt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;d3d11.lib;dxgi.lib;d3dcompiler.lib;sndfile.lib;OpenAL32.lib;assimp-vc142-mt.lib;Jolt.lib;soil2.lib;DirectXTK.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/WX:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Engine\asset\AssetManager.h" />
     <ClInclude Include="Engine\audio\AudioDevice.h" />
     <ClInclude Include="Engine\audio\AudioListener.h" />
     <ClInclude Include="Engine\audio\AudioSource.h" />
@@ -170,6 +172,8 @@
     <ClInclude Include="Engine\file\asset_packer.h" />
     <ClInclude Include="Engine\math\Mathf.h" />
     <ClInclude Include="Engine\math\Vector.h" />
+    <ClInclude Include="Engine\physics\aPhysicsSystem.h" />
+    <ClInclude Include="Engine\physics\Rigidbody.h" />
     <ClInclude Include="Engine\renderer\Camera.h" />
     <ClInclude Include="Engine\renderer\Renderer.h" />
     <ClInclude Include="Engine\renderer\Model.h" />
@@ -183,10 +187,13 @@
     <ClInclude Include="Engine\renderer\MaterialManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Engine\asset\AssetManager.cpp" />
     <ClCompile Include="Engine\audio\AudioDevice.cpp" />
     <ClCompile Include="Engine\audio\AudioListener.cpp" />
     <ClCompile Include="Engine\audio\AudioSource.cpp" />
     <ClCompile Include="Engine\file\asset_packer.cpp" />
+    <ClCompile Include="Engine\physics\aPhysicsSystem.cpp" />
+    <ClCompile Include="Engine\physics\Rigidbody.cpp" />
     <ClCompile Include="Engine\renderer\Renderer.cpp" />
     <ClCompile Include="Engine\renderer\Model.cpp" />
     <ClCompile Include="Engine\renderer\Texture.cpp" />
@@ -224,6 +231,34 @@
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="Engine\renderer\shaders\PPpixelShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="Engine\renderer\shaders\PPvertexShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="Engine\renderer\shaders\ShadowVertexShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
     <FxCompile Include="Engine\renderer\shaders\skyboxPixelShader.hlsl">
@@ -332,6 +367,9 @@
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Engine\renderer\shaders\Lighting.hlsli" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

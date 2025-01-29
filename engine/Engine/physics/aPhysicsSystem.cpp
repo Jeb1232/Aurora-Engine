@@ -1,5 +1,4 @@
 #include "aPhysicsSystem.h"
-#include"Rigidbody.h"
 
 cPhysicsSystem::cPhysicsSystem() {
 
@@ -25,17 +24,20 @@ cPhysicsSystem::cPhysicsSystem() {
 	//body_interface = physicsSystem.GetBodyInterface();
 
 
-	physicsThread = std::thread(&cPhysicsSystem::PhysicsLoop, this);
-	//PhysicsLoop();
+	//physicsThread = std::thread(&cPhysicsSystem::PhysicsLoop, this);
+	PhysicsLoop();
 }
 
 cPhysicsSystem::~cPhysicsSystem() {
 	
 	for (int i = 0; i < rigidBodys.size(); i++) {
-		physicsSystem.GetBodyInterface().RemoveBody(rigidBodys[i].crigidBody->rBody->GetID());
-		physicsSystem.GetBodyInterface().DestroyBody(rigidBodys[i].crigidBody->rBody->GetID());
-		if (rigidBodys[i].crigidBody->rBody != nullptr) {
-			free(rigidBodys[i].crigidBody->rBody);
+		if (!rigidBodys[i].initialized) {
+			physicsSystem.GetBodyInterface().RemoveBody(rigidBodys[i].rBody->GetID());
+			physicsSystem.GetBodyInterface().DestroyBody(rigidBodys[i].rBody->GetID());
+			rigidBodys[i].initialized = false;
+		}
+		if (rigidBodys[i].rBody != nullptr) {
+			free(rigidBodys[i].rBody);
 		}
 	}
 	
@@ -45,14 +47,23 @@ cPhysicsSystem::~cPhysicsSystem() {
 	JPH::Factory::sInstance = nullptr;
 }
 
+void cPhysicsSystem::AddRigidbody(Rigidbody body) {
+	rigidBodys.push_back(body);
+}
+
 void cPhysicsSystem::PhysicsLoop() {
 	bool isSimulating = true;
 	while (isSimulating) {
 		const int cCollisionSteps = 1;
 
 		for (int i = 0; i < rigidBodys.size(); i++) {
-			physicsSystem.GetBodyInterface().GetPositionAndRotation(rigidBodys[i].crigidBody->rBody->GetID(), rigidBodys[i].crigidBody->position, rigidBodys[i].crigidBody->rotation);
-			physicsSystem.GetBodyInterface().GetLinearAndAngularVelocity(rigidBodys[i].crigidBody->rBody->GetID(), rigidBodys[i].crigidBody->lVelocity, rigidBodys[i].crigidBody->aVelocity);
+			if (!rigidBodys[i].initialized) {
+				physicsSystem.GetBodyInterface().CreateBody(rigidBodys[i].cSettings);
+				physicsSystem.GetBodyInterface().AddBody(rigidBodys[i].rBody->GetID(), JPH::EActivation::Activate);
+				rigidBodys[i].initialized = true;
+			}
+			physicsSystem.GetBodyInterface().GetPositionAndRotation(rigidBodys[i].rBody->GetID(), rigidBodys[i].position, rigidBodys[i].rotation);
+			physicsSystem.GetBodyInterface().GetLinearAndAngularVelocity(rigidBodys[i].rBody->GetID(), rigidBodys[i].lVelocity, rigidBodys[i].aVelocity);
 		}
 
 		// Step the world

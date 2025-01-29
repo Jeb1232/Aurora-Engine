@@ -9,6 +9,7 @@
 #include<iostream>
 #include <chrono>
 #include <thread>
+#include"../file/asset_packer.h"
 
 class AudioSource
 {
@@ -16,6 +17,7 @@ public:
 	AURORAENGINE_API AudioSource(ALCdevice* device, ALCcontext* context);
 	AURORAENGINE_API ~AudioSource();
 	void AURORAENGINE_API play(const char* path);
+	void AURORAENGINE_API playM(const char* path);
 	void AURORAENGINE_API setPosition(float x, float y, float z);
 	void AURORAENGINE_API setVelocity(float x, float y, float z);
 

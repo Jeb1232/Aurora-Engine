@@ -26,6 +26,10 @@ void Light::setAmbientColor(glm::vec3 color) {
     ambientColor = glm::vec4(color, 1.0f);
 }
 
+void Light::setLightType(LightType type) {
+    lightType = type;
+}
+
 void Light::UpdateLightBuffer(ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
     LightCB lightBuffer{
         position,
@@ -34,7 +38,7 @@ void Light::UpdateLightBuffer(ID3D11Device* m_device, ID3D11DeviceContext* m_dev
         ambientColor,
         glm::vec3(0.0f,0.0f,0.0f),
         intensity
-	};
+    };
 
     ID3D11Buffer* constantBufferL;
     D3D11_BUFFER_DESC cbdl;
@@ -46,6 +50,8 @@ void Light::UpdateLightBuffer(ID3D11Device* m_device, ID3D11DeviceContext* m_dev
     cbdl.StructureByteStride = 0u;
     D3D11_SUBRESOURCE_DATA lcsd = {};
     lcsd.pSysMem = &lightBuffer;
-    m_device->CreateBuffer(&cbdl, &lcsd, &constantBufferL);
+    if (FAILED(m_device->CreateBuffer(&cbdl, &lcsd, &constantBufferL))) {
+        std::cerr << "Failed to create light constant buffer!" << std::endl;
+    }
     m_deviceContext->PSSetConstantBuffers(0, 1, &constantBufferL);
 }

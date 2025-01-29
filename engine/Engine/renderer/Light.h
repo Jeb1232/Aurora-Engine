@@ -28,10 +28,6 @@ public:
 		LIGHT_AREA = 4
 	};
 
-
-
-	//__declspec(align(16))
-
 	// retarded byte alignment (fuck you directx)
 		struct LightCB {
 		glm::vec4 position;
@@ -49,11 +45,13 @@ public:
 	void AURORAENGINE_API setRotation(glm::vec3 rot);
 	void AURORAENGINE_API setLightColor(glm::vec3 color);
 	void AURORAENGINE_API setAmbientColor(glm::vec3 color);
+	void AURORAENGINE_API setLightType(LightType type);
 	glm::vec4 position;
 	glm::vec4 direction;
 	float intensity = 1;
 	glm::vec4 lightColor;
 	glm::vec4 ambientColor;
+	LightType lightType;
 private:
 };
 

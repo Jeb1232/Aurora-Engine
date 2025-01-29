@@ -14,6 +14,7 @@ cbuffer CBuf {
 	matrix modelMatrix;
 	matrix viewMatrix;
 	matrix projectionMatrix;
+	matrix lightSpaceMatrix;
 	float3 cameraPosition;
 };
 

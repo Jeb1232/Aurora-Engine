@@ -22,6 +22,13 @@ public:
 		LIGHT
 	};
 
+	struct Material {
+		std::string name;
+		ID3D11ShaderResourceView* diffuse = nullptr;
+		ID3D11ShaderResourceView* normal = nullptr;
+		ID3D11ShaderResourceView* specular = nullptr;
+	};
+
 	struct Transform {
 		glm::vec3 position;
 		glm::vec3 rotation;
@@ -59,6 +66,11 @@ public:
 	Model model;
 	//AudioSource source;
 	Light light;
+	bool useMaterials = false;
+	bool texturesLoaded = false;
+	//std::vector<ID3D11ShaderResourceView*> textures;
+	std::vector<Material> materials;
+	//std::vector<ID3D11ShaderResourceView*> texturesSpec;
 
 	void AURORAENGINE_API setModel(Model Imodel);
 	void AURORAENGINE_API setASource(AudioSource aSource);

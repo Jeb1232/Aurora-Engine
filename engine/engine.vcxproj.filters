@@ -69,6 +69,15 @@
     <ClInclude Include="Engine\renderer\MaterialManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\asset\AssetManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\physics\aPhysicsSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\physics\Rigidbody.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\renderer\Renderer.cpp">
@@ -110,6 +119,15 @@
     <ClCompile Include="Engine\renderer\MaterialManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\asset\AssetManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\physics\aPhysicsSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\physics\Rigidbody.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Engine\renderer\shaders\vertexShader.hlsl" />
@@ -121,5 +139,11 @@
     <FxCompile Include="Engine\renderer\shaders\PostProcessingVertexShader.hlsl" />
     <FxCompile Include="Engine\renderer\shaders\skyboxVertexShader.hlsl" />
     <FxCompile Include="Engine\renderer\shaders\skyboxPixelShader.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\PPvertexShader.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\PPpixelShader.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\ShadowVertexShader.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Engine\renderer\shaders\Lighting.hlsli" />
   </ItemGroup>
 </Project>

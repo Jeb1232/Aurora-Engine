@@ -7,15 +7,16 @@
 
 int main(int argc, char* argv[]) 
 {
-	//AudioDevice device;
-	//AudioListener listener;
-	//AudioSource source(device.device, device.context);
-	//source.listener = listener;
+	AudioDevice device;
+	AudioListener listener;
+	AudioSource source(device.device, device.context);
+	source.listener = listener;
 	Renderer renderer;
 	Scene scene;
 	renderer.SetActiveScene(&scene);
 
 	//source.play("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/music.ogg");
+	//source.playM("sewer_air1.wav");
 	//source.looping = true;
 	renderer.CreateRenderWindow(1280, 720, false);
 	while (!renderer.finishedRendering);

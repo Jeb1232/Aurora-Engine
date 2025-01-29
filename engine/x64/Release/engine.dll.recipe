@@ -13,6 +13,15 @@
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\PostProcessingVertexShader.cso</FullPath>
     </ContentFile>
     <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\PPpixelShader.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\PPvertexShader.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\ShadowVertexShader.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\skyboxPixelShader.cso</FullPath>
     </ContentFile>
     <ContentFile>

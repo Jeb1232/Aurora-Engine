@@ -74,18 +74,16 @@ Texture::Texture(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* 
 		&ImageShaderResourceView
 	);
 	m_deviceContext->GenerateMips(ImageShaderResourceView);
-
 	stbi_image_free(ImageData);
-
 	ImageSamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	ImageSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	ImageSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	ImageSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	ImageSamplerDesc.MipLODBias = -2.0f;
-	ImageSamplerDesc.MaxAnisotropy = 1;
+	ImageSamplerDesc.MipLODBias = 0.0f;
+	ImageSamplerDesc.MaxAnisotropy = 0;
 	ImageSamplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-	ImageSamplerDesc.MinLOD = -FLT_MAX;
-	ImageSamplerDesc.MaxLOD = FLT_MAX;
+	ImageSamplerDesc.MinLOD = 0;
+	ImageSamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	m_device->CreateSamplerState(&ImageSamplerDesc,
 		&ImageSamplerState);
@@ -138,7 +136,7 @@ Texture::Texture(std::vector<const char*> paths, ID3D11Device* m_device, ID3D11D
 	ImageTextureDesc.Height = images[0].ImageHeight;
 	ImageTextureDesc.MipLevels = 1;
 	ImageTextureDesc.ArraySize = 6;
-	ImageTextureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	ImageTextureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	ImageTextureDesc.SampleDesc.Count = 1;
 	ImageTextureDesc.SampleDesc.Quality = 0;
 	ImageTextureDesc.Usage = D3D11_USAGE_DEFAULT;

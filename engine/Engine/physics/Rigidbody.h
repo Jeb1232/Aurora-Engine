@@ -10,19 +10,18 @@
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
-
-class cPhysicsSystem;
-
 class Rigidbody {
 public:
-	Rigidbody(cPhysicsSystem* lphysicsSystem);
+	Rigidbody(JPH::BodyCreationSettings settings);
 	~Rigidbody();
-	cPhysicsSystem *physicsSystem  = nullptr;
-
+	//cPhysicsSystem *physicsSystem  = nullptr;
+	//JPH::BodyCreationSettings settings
 	JPH::RVec3 position;
 	JPH::Quat rotation;
 	JPH::Vec3 lVelocity;
 	JPH::Vec3 aVelocity;
+
+	bool initialized = false;
 
 	JPH::Body* rBody = nullptr;
 	JPH::BodyCreationSettings cSettings;

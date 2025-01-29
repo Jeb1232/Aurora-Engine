@@ -5,7 +5,7 @@ class MaterialManager
 public:
 	struct Material {
 		std::string name;
-		Texture* diffuse;
+		Texture* diffuse = nullptr;
 	};
 	void AddMaterial(Material mat);
 	std::vector<Material> materials;

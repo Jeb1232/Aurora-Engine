@@ -13,24 +13,11 @@
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
+#include"Rigidbody.h"
 
 //using namespace JPH;
 
 JPH_SUPPRESS_WARNINGS
-
-#ifdef JPH_ENABLE_ASSERTS
-
-// Callback for asserts, connect this to your own assert handler if you have one
-static bool AssertFailedImpl(const char* inExpression, const char* inMessage, const char* inFile, JPH::uint inLine)
-{
-	// Print to the TTY
-	std::cout << inFile << ":" << inLine << ": (" << inExpression << ") " << (inMessage != nullptr ? inMessage : "") << std::endl;
-
-	// Breakpoint
-	return true;
-};
-
-#endif // JPH_ENABLE_ASSERTS
 
 namespace Layers
 {
@@ -89,10 +76,10 @@ public:
 
 	virtual JPH::BroadPhaseLayer			GetBroadPhaseLayer(JPH::ObjectLayer inLayer) const override
 	{
-		JPH_ASSERT(inLayer < Layers::NUM_LAYERS);
+		//JPH_ASSERT(inLayer < Layers::NUM_LAYERS);
 		return mObjectToBroadPhase[inLayer];
 	}
-
+	/*
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
 	virtual const char* GetBroadPhaseLayerName(BroadPhaseLayer inLayer) const override
 	{
@@ -104,7 +91,7 @@ public:
 		}
 	}
 #endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
-
+*/
 private:
 	JPH::BroadPhaseLayer					mObjectToBroadPhase[Layers::NUM_LAYERS];
 };
@@ -171,8 +158,6 @@ public:
 	}
 };
 
-class Rigidbody;
-
 class cPhysicsSystem
 {
 public:
@@ -198,11 +183,11 @@ public:
 	// of your own job scheduler. JobSystemThreadPool is an example implementation.
 	JPH::JobSystemThreadPool job_system = JPH::JobSystemThreadPool(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1);
 
-
+	/*
 	struct sRigidBody {
 		Rigidbody* crigidBody = nullptr;
 	};
-
+	*/
 	std::thread physicsThread;
 
 	//This is the max amount of rigid bodies that you can add to the physics system. If you try to add more you'll get an error.
@@ -219,9 +204,11 @@ public:
 
 	const float pDeltaTime = 1.0f / 60.0f;
 
-	std::vector<sRigidBody> rigidBodys;
+	std::vector<Rigidbody> rigidBodys;
 
 	void AURORAENGINE_API PhysicsLoop();
+
+	void AURORAENGINE_API AddRigidbody(Rigidbody body);
 private:
 };
 
