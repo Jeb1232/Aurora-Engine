@@ -24,7 +24,9 @@
 #include"Light.h"
 #include"../scene/Scene.h"
 #include"Camera.h"
-//#include"../physics/aPhysicsSystem.h"
+#include"../physics/aPhysicsSystem.h"
+#include"DirectXMath.h"
+#include"Terrain.h"
 
 class Renderer
 {
@@ -40,7 +42,7 @@ public:
 		float x, y, z;
 		float nx, ny, nz;
 		float u, v;
-		float tx, ty, tz;
+		//float tx, ty, tz;
 	};
 	struct Vertex2 {
 		//glm::vec3 pos;
@@ -55,14 +57,30 @@ public:
 		glm::mat4 viewMatrix;
 		glm::mat4 projectionMatrix;
 		glm::mat4 lightSpaceMatrix;
+		//DirectX::XMMATRIX lightSpaceMatrix;
 		glm::vec3 cameraPos;
 		//float padding;
+	};
+	//__declspec(align(16))
+		struct ConstantBuffer2 {
+		glm::mat4 modelMatrix;
+		glm::mat4 viewMatrix;
+		glm::mat4 projectionMatrix;
+		//glm::mat4 lightSpaceMatrix;
+		glm::mat4 lightViewMatrix;
+		glm::mat4 lightProjectionMatrix;
+		//DirectX::XMMATRIX lightViewMatrix;
+		//DirectX::XMMATRIX lightProjectionMatrix;
+		glm::vec3 cameraPos;
+		float padding;
 	};
 	//__declspec(align(16))
 		struct SconstantBuffer {
 		glm::mat4 modelMatrix;
 		glm::mat4 viewMatrix;
 		glm::mat4 ProjectionMatrix;
+		//DirectX::XMMATRIX viewMatrix;
+		//DirectX::XMMATRIX projectionMatrix;
 		//glm::mat4 lightSpaceMatrix;
 	};
 	__declspec(align(16))
@@ -74,11 +92,16 @@ public:
 		glm::vec3 ambientColor;
 		//glm::vec3 camPosition;
 	};
-	__declspec(align(16))
+	//__declspec(align(16))
 		struct PostProcessBuffer {
+		glm::mat4 prevViewMatrix;
 		glm::mat4 prevProjMatrix;
+		glm::mat4 viewMatrix;
 		glm::mat4 projMatrix;
+		glm::vec3 lightPos;
 		glm::vec3 camPos;
+		float padding;
+		float padding2;
 	};
 	SDL_Window* window;
 	HWND hWindow;
@@ -100,10 +123,10 @@ private:
 	ID3D11RenderTargetView* m_renderTargetView = nullptr;
 	ID3D11RenderTargetView* m_renderTargetView2 = nullptr;
 	//ID3D11Buffer* vertexBuffer = nullptr;
-	ID3D11VertexShader* vertexShader = nullptr;
+	//ID3D11VertexShader* vertexShader = nullptr;
 	ID3D11HullShader* hullShader = nullptr;
 	ID3D11DomainShader* domainShader = nullptr;
-	ID3D11PixelShader* pixelShader = nullptr;
+	//ID3D11PixelShader* pixelShader = nullptr;
 	ID3D11InputLayout* inputLayout = nullptr;
 	ID3D11InputLayout* skyboxInputLayout = nullptr;
 	ID3D11InputLayout* ppinputLayout = nullptr;

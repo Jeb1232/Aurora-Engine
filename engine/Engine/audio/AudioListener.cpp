@@ -36,7 +36,7 @@ void AudioListener::setVelocity(glm::vec3 vel) {
 	velocity[1] = newVel[1];
 	velocity[2] = newVel[2];
 
-	alListenerfv(AL_POSITION, velocity);
+	alListenerfv(AL_VELOCITY, velocity);
 }
 
 AudioListener::~AudioListener() {

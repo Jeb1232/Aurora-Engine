@@ -8,13 +8,20 @@
 #include"../renderer/Model.h"
 #include"../renderer/Light.h"
 #include"../renderer/MaterialManager.h"
+#include"../renderer/Camera.h"
+#include"../core/Component.h"
+
 
 
 class Entity
 {
 public:
 	MaterialManager matManager;
+
+	std::vector<Component> components;
+
 	Entity* parent = nullptr;
+	std::vector<Entity*> children;
 	enum EntityType {
 		NONE,
 		MODEL,
@@ -68,6 +75,7 @@ public:
 	Light light;
 	bool useMaterials = false;
 	bool texturesLoaded = false;
+	bool frustumCulling = true;
 	//std::vector<ID3D11ShaderResourceView*> textures;
 	std::vector<Material> materials;
 	//std::vector<ID3D11ShaderResourceView*> texturesSpec;
@@ -80,7 +88,7 @@ public:
 	void AURORAENGINE_API setScale(glm::vec3 scale);
 	void AURORAENGINE_API Update();
 	void AURORAENGINE_API UpdateMatrixes(glm::mat4 view, glm::mat4 projection, glm::vec3 camPos);
-	void AURORAENGINE_API DrawModel(ID3D11DeviceContext* m_deviceContext, ID3D11Device* m_device);
+	void AURORAENGINE_API DrawModel(ID3D11DeviceContext* m_deviceContext, ID3D11Device* m_device, Frustum cameraFrustum, bool frustumCull);
 private:
 	glm::vec3 camPosition;
 };

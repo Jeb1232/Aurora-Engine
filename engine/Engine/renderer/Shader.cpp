@@ -1,37 +1,69 @@
 #include "Shader.h"
 
-Shader::Shader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext, ShaderType type) {
+Shader::Shader(std::string shaderName) {
+
+	name = shaderName;
+}
+
+void Shader::SetVertexShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+	
+
 	D3DReadFileToBlob((LPCWSTR)path, &sBlob);
 
-	// noob-like if statement nest
-	if (type == ShaderType::Vertex) {
-		m_device->CreateVertexShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &vertexShader);
-	}
-	else if (type == ShaderType::Pixel) {
-		m_device->CreatePixelShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &pixelShader);
-	}
-	else if (type == ShaderType::Hull) {
-		m_device->CreateHullShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &hullShader);
-	}
-	else if (type == ShaderType::Domain) {
-		m_device->CreateDomainShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &domainShader);
-	}
-	else if (type == ShaderType::Geometry) {
-		m_device->CreateGeometryShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &geomShader);
-	}
-	else if (type == ShaderType::Compute) {
-		m_device->CreateComputeShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &compShader);
-	}
+	m_device->CreateVertexShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &vertexShader);
 
-	if (type == ShaderType::Vertex) {
-		D3D11_INPUT_ELEMENT_DESC layout[] = {
-			{"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA},
-			{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-			{"UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		};
-		m_device->CreateInputLayout(layout, 3, sBlob->GetBufferPointer(), sBlob->GetBufferSize(), &inputLayout);
-	}
+	delete sBlob;
+	sBlob = nullptr;
+}
 
+void Shader::SetHullShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+
+	D3DReadFileToBlob((LPCWSTR)path, &sBlob);
+
+	m_device->CreateHullShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &hullShader);
+
+	delete sBlob;
+	sBlob = nullptr;
+}
+
+void Shader::SetDomainShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+
+	D3DReadFileToBlob((LPCWSTR)path, &sBlob);
+
+	m_device->CreateDomainShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &domainShader);
+
+	delete sBlob;
+	sBlob = nullptr;
+}
+
+void Shader::SetPixelShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+
+	D3DReadFileToBlob((LPCWSTR)path, &sBlob);
+
+	m_device->CreatePixelShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &pixelShader);
+
+	delete sBlob;
+	sBlob = nullptr;
+}
+
+void Shader::SetGeometryShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+
+	D3DReadFileToBlob((LPCWSTR)path, &sBlob);
+
+	m_device->CreateGeometryShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &geomShader);
+
+	delete sBlob;
+	sBlob = nullptr;
+}
+
+void Shader::SetComputeShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+
+	D3DReadFileToBlob((LPCWSTR)path, &sBlob);
+
+	m_device->CreateComputeShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &compShader);
+
+	delete sBlob;
+	sBlob = nullptr;
 }
 
 Shader::~Shader() {

@@ -20,6 +20,36 @@ const float SPEED = 2.5f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 60.0f;
 
+struct Plane
+{
+    glm::vec3 normal = { 0.f, 1.f, 0.f }; // unit vector
+    float     distance = 0.f;        // Distance with origin
+
+    Plane() = default;
+
+    Plane(const glm::vec3& p1, const glm::vec3& norm){
+        normal = glm::normalize(norm);
+        distance = glm::dot(normal, p1);
+    }
+
+    float getSignedDistanceToPlane(const glm::vec3& point) const
+    {
+        return glm::dot(normal, point) - distance;
+    }
+};
+
+struct Frustum
+{
+    Plane topFace;
+    Plane bottomFace;
+
+    Plane rightFace;
+    Plane leftFace;
+
+    Plane farFace;
+    Plane nearFace;
+};
+
 
 // An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
 class Camera
@@ -37,10 +67,29 @@ public:
     // camera options
     float MovementSpeed;
     float MouseSensitivity;
-    float Zoom;
+    float Fov;
+
+
+    Frustum cameraFrustum = {};
+
+    void createFrustumFromCamera(float aspect, float fovY, float zNear, float zFar)
+    {
+        //Frustum     frustum = {};
+        float halfVSide = zFar * tanf(fovY * .5f);
+        float halfHSide = halfVSide * aspect;
+        glm::vec3 frontMultFar = zFar * Front;
+
+        cameraFrustum.nearFace = { Position + zNear * Front, Front };
+        cameraFrustum.farFace = { Position + frontMultFar, -Front };
+        cameraFrustum.rightFace = { Position, glm::cross(frontMultFar - Right * halfHSide, Up) };
+        cameraFrustum.leftFace = { Position, glm::cross(Up, frontMultFar + Right * halfHSide) };
+        cameraFrustum.topFace = { Position, glm::cross(Right, frontMultFar - Up * halfVSide) };
+        cameraFrustum.bottomFace = { Position, glm::cross(frontMultFar + Up * halfVSide, Right) };
+        //cameraFrustum = frustum;
+    }
 
     // constructor with vectors
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Fov(ZOOM)
     {
         Position = position;
         WorldUp = up;
@@ -49,7 +98,7 @@ public:
         updateCameraVectors();
     }
     // constructor with scalar values
-    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Fov(ZOOM)
     {
         Position = glm::vec3(posX, posY, posZ);
         WorldUp = glm::vec3(upX, upY, upZ);
@@ -104,11 +153,11 @@ public:
     // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void ProcessMouseScroll(float yoffset)
     {
-        Zoom -= (float)yoffset;
-        if (Zoom < 1.0f)
-            Zoom = 1.0f;
-        if (Zoom > 45.0f)
-            Zoom = 45.0f;
+        Fov -= (float)yoffset;
+        if (Fov < 1.0f)
+            Fov = 1.0f;
+        if (Fov > 45.0f)
+            Fov = 45.0f;
     }
 
 private:

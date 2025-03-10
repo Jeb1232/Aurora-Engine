@@ -47,13 +47,19 @@ void Entity::UpdateMatrixes(glm::mat4 Iview, glm::mat4 Iprojection, glm::vec3 ca
     camPosition = camPos;
 }
 
-void Entity::DrawModel(ID3D11DeviceContext* m_deviceContext, ID3D11Device* m_device) {
+float GetDistance(float x1, float x2, float y1, float y2, float z1, float z2) {
+    float dx = x1 - x2;
+    float dy = y1 - y2;
+    float dz = z1 - z2;
+    return dx * dx + dy * dy + dz * dz;
+}
+
+void Entity::DrawModel(ID3D11DeviceContext* m_deviceContext, ID3D11Device* m_device, Frustum cameraFrustum, bool frustumCull) {
 
     for (int i = 0; i < model.meshes.size(); i++)
     {
         UINT stride = sizeof(Vertex);
         UINT offset = 0;
-
         if (&model.meshes[0].vertexBuffer == NULL) {
             std::cerr << "vertex buff is broken" << std::endl;
         }
@@ -82,6 +88,10 @@ void Entity::DrawModel(ID3D11DeviceContext* m_deviceContext, ID3D11Device* m_dev
             //ssetPacker::LoadedFile lFile = packer.LoadFileFromPackage("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/data001.pak", path);
             std::string texName = model.meshes[i].material.substr(9, model.meshes[i].material.length() - 9);
             std::string texPath = "C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/Textures/" + texName;
+            //std::cout << texPath << std::endl;
+            //Material newMat;
+            //newMat.name = model.meshes[i].materialname;
+            
             std::wstring widestr = std::wstring(texPath.begin(), texPath.end());
             const wchar_t* widecstr = widestr.c_str();
             std::string texName2 = "";
@@ -92,6 +102,7 @@ void Entity::DrawModel(ID3D11DeviceContext* m_deviceContext, ID3D11Device* m_dev
             std::wstring widestr2 = std::wstring(texPath2.begin(), texPath2.end());
             const wchar_t* widecstr2 = widestr2.c_str();
             Material newMat;
+            newMat.name = model.meshes[i].materialname;
             if (!texturesLoaded) {
                 DirectX::CreateDDSTextureFromFile(m_device, widecstr, nullptr, &newMat.diffuse);
                 if (texName2 != "") {
@@ -99,8 +110,18 @@ void Entity::DrawModel(ID3D11DeviceContext* m_deviceContext, ID3D11Device* m_dev
                 }
             }
             if (!texturesLoaded) {
-                materials.push_back(newMat);
+                bool matExists = false;
+                for (int m = 0; m < materials.size(); m++) {
+                    if (materials[m].name == newMat.name) {
+                        matExists = true;
+                        break;
+                    }
+                }
+                if (!matExists) {
+                    materials.push_back(newMat);
+                }
             }
+            
             //textures.push_back(ImageShaderResourceView);
             //texturesSpec.push_back(ImageShaderResourceView2);
             /*
@@ -149,17 +170,17 @@ void Entity::DrawModel(ID3D11DeviceContext* m_deviceContext, ID3D11Device* m_dev
 
                 // Sampler
 
-                m_deviceContext->UpdateSubresource(ImageTexture2, 0, nullptr, ImageData, ImageSubresourceData.SysMemPitch, 0);
+                m_deviceContext->UpdateSubresource(ImageTexture, 0, nullptr, ImageData, ImageSubresourceData.SysMemPitch, 0);
 
-                m_device->CreateShaderResourceView(ImageTexture2,
+                m_device->CreateShaderResourceView(ImageTexture,
                     &srvDesc,
-                    &ImageShaderResourceView
+                    &newMat.diffuse
                 );
-                m_deviceContext->GenerateMips(ImageShaderResourceView);
+                m_deviceContext->GenerateMips(newMat.diffuse);
                 stbi_image_free(ImageData);
 
-
                 */
+                
             if (!texturesLoaded) {
                 m_deviceContext->PSSetShaderResources(0, 1, &newMat.diffuse);
                 if (texName2 != "") {
@@ -167,14 +188,26 @@ void Entity::DrawModel(ID3D11DeviceContext* m_deviceContext, ID3D11Device* m_dev
                 }
             }
             else if (texturesLoaded) {
-                m_deviceContext->PSSetShaderResources(0, 1, &materials[i].diffuse);
+                for (int m = 0; m < materials.size(); m++) {
+                    if (materials[m].name == newMat.name) {
+                        m_deviceContext->PSSetShaderResources(0, 1, &materials[m].diffuse);
+                    }
+                }
+                //m_deviceContext->PSSetShaderResources(0, 1, &materials[i].diffuse);
                 if (texName2 != "") {
                     //m_deviceContext->PSSetShaderResources(1, 1, &materials[i].specular);
                 }
             }
                 //m_deviceContext->PSSetSamplers(0, 1, &matManager.materials[m].diffuse->ImageSamplerState);
         }
-        m_deviceContext->DrawIndexed((UINT)model.meshes[i].indices.size(), 0u, 0u);
+        if (model.meshes[i].boundingBox.isOnFrustum(cameraFrustum, Matmodel) && frustumCull) {
+            m_deviceContext->DrawIndexed((UINT)model.meshes[i].indices.size(), 0u, 0u);
+        }
+        else if (!frustumCull) {
+            m_deviceContext->DrawIndexed((UINT)model.meshes[i].indices.size(), 0u, 0u);
+        }
     }
-    texturesLoaded = true;
+    if (useMaterials) {
+        texturesLoaded = true;
+    }
 }

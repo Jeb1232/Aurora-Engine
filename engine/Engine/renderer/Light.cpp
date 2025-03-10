@@ -1,7 +1,7 @@
 #include "Light.h"
 
 Light::Light() {
-    intensity = 1;
+    intensity = 1.0f;
     lightColor = glm::vec4(1.0f, 1.0f, 1.0f,1.0f);
     ambientColor = glm::vec4(0.1f, 0.1f, 0.1f,1.0f);
 }
@@ -37,7 +37,7 @@ void Light::UpdateLightBuffer(ID3D11Device* m_device, ID3D11DeviceContext* m_dev
         lightColor,
         ambientColor,
         glm::vec3(0.0f,0.0f,0.0f),
-        intensity
+        intensity,
     };
 
     ID3D11Buffer* constantBufferL;
@@ -51,7 +51,7 @@ void Light::UpdateLightBuffer(ID3D11Device* m_device, ID3D11DeviceContext* m_dev
     D3D11_SUBRESOURCE_DATA lcsd = {};
     lcsd.pSysMem = &lightBuffer;
     if (FAILED(m_device->CreateBuffer(&cbdl, &lcsd, &constantBufferL))) {
-        std::cerr << "Failed to create light constant buffer!" << std::endl;
+        std::cout << "Failed to create light constant buffer!" << std::endl;
     }
     m_deviceContext->PSSetConstantBuffers(0, 1, &constantBufferL);
 }

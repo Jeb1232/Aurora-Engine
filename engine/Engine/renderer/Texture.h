@@ -25,6 +25,8 @@ public:
 	Texture(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
 	Texture(std::vector<const char*> paths, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
 	~Texture();
+	unsigned char* iData;
+	void AURORAENGINE_API getPixel(size_t imageWidth, size_t x, size_t y, int r, int g, int b, int a);
 
 	const char* Tpath;
 	D3D11_TEXTURE2D_DESC ImageTextureDesc = {};

@@ -2,6 +2,11 @@
 
 cPhysicsSystem::cPhysicsSystem() {
 
+	JPH::RegisterDefaultAllocator();
+
+	JPH::Trace = TraceImpl;
+	JPH_IF_ENABLE_ASSERTS(JPH::AssertFailed = AssertFailedImpl;)
+
 	JPH::Factory::sInstance = new JPH::Factory();
 
 	// Register all physics types with the factory and install their collision handlers with the CollisionDispatch class.
@@ -28,6 +33,7 @@ cPhysicsSystem::cPhysicsSystem() {
 	PhysicsLoop();
 }
 
+
 cPhysicsSystem::~cPhysicsSystem() {
 	
 	for (int i = 0; i < rigidBodys.size(); i++) {
@@ -51,15 +57,39 @@ void cPhysicsSystem::AddRigidbody(Rigidbody body) {
 	rigidBodys.push_back(body);
 }
 
+Rigidbody cPhysicsSystem::GetRigidbody(Rigidbody body) {
+	for (int i = 0; i < rigidBodys.size(); i++) {
+		if (rigidBodys[i].cSettings.mMotionType == JPH::EMotionType::Dynamic) {
+			return rigidBodys[i];
+		}
+	}
+}
+
 void cPhysicsSystem::PhysicsLoop() {
-	bool isSimulating = true;
+
+	JPH::TempAllocatorImpl temp_allocator = JPH::TempAllocatorImpl(10 * 1024 * 1024);
+
+	JPH::JobSystemThreadPool job_system = JPH::JobSystemThreadPool(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1);
+
+	
+	JPH::BodyID dynamicBody;
+	for (int i = 0; i < rigidBodys.size(); i++) {
+		if (rigidBodys[i].cSettings.mMotionType == JPH::EMotionType::Dynamic) {
+			dynamicBody = rigidBodys[i].rBody->GetID();
+		}
+	}
 	while (isSimulating) {
 		const int cCollisionSteps = 1;
 
 		for (int i = 0; i < rigidBodys.size(); i++) {
 			if (!rigidBodys[i].initialized) {
 				physicsSystem.GetBodyInterface().CreateBody(rigidBodys[i].cSettings);
-				physicsSystem.GetBodyInterface().AddBody(rigidBodys[i].rBody->GetID(), JPH::EActivation::Activate);
+				if (rigidBodys[i].cSettings.mMotionType == JPH::EMotionType::Dynamic) {
+					physicsSystem.GetBodyInterface().AddBody(rigidBodys[i].rBody->GetID(), JPH::EActivation::Activate);
+				}
+				else if (rigidBodys[i].cSettings.mMotionType == JPH::EMotionType::Static) {
+					physicsSystem.GetBodyInterface().AddBody(rigidBodys[i].rBody->GetID(), JPH::EActivation::DontActivate);
+				}
 				rigidBodys[i].initialized = true;
 			}
 			physicsSystem.GetBodyInterface().GetPositionAndRotation(rigidBodys[i].rBody->GetID(), rigidBodys[i].position, rigidBodys[i].rotation);

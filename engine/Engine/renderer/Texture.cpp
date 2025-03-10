@@ -27,6 +27,8 @@ Texture::Texture(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* 
 
 	int ImagePitch = ImageWidth * 4;
 
+	iData = ImageData;
+
 	if (!ImageData) {
 		std::cout << "Failed to load image: " << path << '\n';
 		stbi_image_free(ImageData);
@@ -87,6 +89,14 @@ Texture::Texture(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* 
 
 	m_device->CreateSamplerState(&ImageSamplerDesc,
 		&ImageSamplerState);
+}
+
+void Texture::getPixel(size_t imageWidth, size_t x, size_t y, int r, int g, int b, int a) {
+	size_t index = 4 * (y * imageWidth + x);
+	r = static_cast<int>(iData[index + 0]);
+	g = static_cast<int>(iData[index + 1]);
+	b = static_cast<int>(iData[index + 2]);
+	a = static_cast<int>(iData[index + 3]);
 }
 
 Texture::Texture(std::vector<const char*> paths, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext)

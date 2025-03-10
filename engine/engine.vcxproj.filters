@@ -78,6 +78,15 @@
     <ClInclude Include="Engine\physics\Rigidbody.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\scene\Components.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\core\Component.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\renderer\Cubemap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\renderer\Renderer.cpp">
@@ -128,6 +137,12 @@
     <ClCompile Include="Engine\physics\Rigidbody.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\core\Component.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\renderer\Cubemap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Engine\renderer\shaders\vertexShader.hlsl" />
@@ -142,6 +157,9 @@
     <FxCompile Include="Engine\renderer\shaders\PPvertexShader.hlsl" />
     <FxCompile Include="Engine\renderer\shaders\PPpixelShader.hlsl" />
     <FxCompile Include="Engine\renderer\shaders\ShadowVertexShader.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\Blur.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\TerrainVS.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\TerrainPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\renderer\shaders\Lighting.hlsli" />

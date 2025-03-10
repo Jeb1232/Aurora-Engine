@@ -46,11 +46,11 @@ public:
 	void AURORAENGINE_API setLightColor(glm::vec3 color);
 	void AURORAENGINE_API setAmbientColor(glm::vec3 color);
 	void AURORAENGINE_API setLightType(LightType type);
-	glm::vec4 position;
-	glm::vec4 direction;
-	float intensity = 1;
-	glm::vec4 lightColor;
-	glm::vec4 ambientColor;
+	glm::vec4 position = glm::vec4(0.0f);
+	glm::vec4 direction = glm::vec4(0.0f);
+	float intensity = 1.0f;
+	glm::vec4 lightColor = glm::vec4(0.0f);
+	glm::vec4 ambientColor = glm::vec4(0.0f);
 	LightType lightType;
 private:
 };

@@ -20,12 +20,18 @@ public:
 	void AURORAENGINE_API playM(const char* path);
 	void AURORAENGINE_API setPosition(float x, float y, float z);
 	void AURORAENGINE_API setVelocity(float x, float y, float z);
+	void AURORAENGINE_API setMinDistance(float minDist);
+	void AURORAENGINE_API setMaxDistance(float maxDist);
+	void AURORAENGINE_API setRollOffFactor(float factor);
 
 	// Parameters
 	AudioListener listener;
 	ALuint source;
 	ALfloat volume = 1.0f;
 	ALfloat pitch = 1.0f;
+	ALfloat minDistance = 1.0f;
+	ALfloat maxDistance = 10.0f;
+	ALfloat rolloffFactor = 1.0f;
 	ALfloat position[3] = { 0.0f,0.0f,-10.0f };
 	ALfloat velocity[3] = { 0.0f,0.0f,0.0f };
 	bool looping = false;

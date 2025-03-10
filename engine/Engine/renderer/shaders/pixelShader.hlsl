@@ -4,10 +4,11 @@ struct Input {
     float4 position : SV_POSITION;
     float3 camPos : CPOS;
     float3 worldPos : WPOS;
-    float4 worldPosLightSpace : WPLS;
+    float4 worldPosLightSpace : WPOSL;
 	//float3 vPos : Position;
 	float3 normal : NORMAL;
 	float2 uv: UV;
+    bool isFrontFace : SV_IsFrontFace;
     //float3 tangent : TANGENT;
 };
 
@@ -22,7 +23,7 @@ SamplerState skySampler : register(s15);
 Texture2D shadowMap : register(t18);
 SamplerState shadowSampler : register(s13);
 
-cbuffer Light {
+cbuffer LightBuf {
     float4 position;
     float4 direction;
     float4 lightColor;
@@ -36,17 +37,30 @@ float ShadowCalculation(float4 worldPosLightSpace)
 {
     float shadow = 0.0f;
     // perform perspective divide
-    float3 projCoords = worldPosLightSpace.xyz / worldPosLightSpace.w;
-    if (projCoords.z <= 1.0f) {
-        // transform to [0,1] range
-        projCoords = projCoords * 0.5f + 0.5f;
-        // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-        float closestDepth = shadowMap.Sample(shadowSampler, projCoords.xy).r;
-        // get depth of current fragment from light's perspective
-        float currentDepth = projCoords.z / worldPosLightSpace.w;
-        // check whether current frag pos is in shadow
+    float3 projCoords = worldPosLightSpace.xyz;
+    //float2 shadowTexCoords;
+   // shadowTexCoords.x = (worldPosLightSpace.x / worldPosLightSpace.w);
+   // shadowTexCoords.y = (worldPosLightSpace.y / worldPosLightSpace.w);
+    //float currentDepth = worldPosLightSpace.z / worldPosLightSpace.w;
 
-        float bias = 0.005;
+    // transform to [0,1] range
+    //projCoords = projCoords * 0.5f + 0.5f;
+    projCoords.x = worldPosLightSpace.x * 0.5f + 0.5f;
+    projCoords.y = -worldPosLightSpace.y * 0.5f + 0.5f;
+    if (saturate(projCoords).x == projCoords.x && saturate(projCoords).y == projCoords.y) {
+
+        // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+        //shadowTexCoords
+        float closestDepth = shadowMap.Sample(shadowSampler, projCoords.xy).r;
+
+        float currentDepth = projCoords.z;
+
+        //float closestDepth = shadowMap.Sample(shadowSampler, shadowTexCoords).r;
+        // get depth of current fragment from light's perspective
+        //float currentDepth = projCoords.z;
+        // check whether current frag pos is in shadow
+        float bias = 0.0002;
+        //shadow = shadowMap.SampleCmpLevelZero(shadowSampler, shadowTexCoords, pixelDepth + bias).r;
         if (currentDepth - bias > closestDepth) {
             shadow = 1.0f;
         }
@@ -79,7 +93,7 @@ float4 main(Input input) : SV_TARGET
     float metallic = 0.0f;
     //float roughness = clamp(specularT.Sample(sSampler, input.uv),0.05f,1.0f);
     float ao = 1.0f;
-
+    
 	if (albedoTex.a < 0.5f) {
 		discard;
 	}
@@ -112,14 +126,39 @@ float4 main(Input input) : SV_TARGET
     float3 phongColor = diffuse + specular;
     //return float4(color * pow(finalColor, 1.0 / 2.2), 1.0f);
     */
-     
-    float3 color = PBRdir(albedoTex, input.normal, metallic, roughnessTex, ao, float3(0.0f, -1.0f, 0.5f), input.camPos, input.worldPos);
-    //color = color / (color + float3(1.0f, 1.0f, 1.0f));
+
+    float3 I = normalize(input.worldPos - input.camPos);
+    float3 R = reflect(I, normalize(input.normal));
+    float3 reflectColor = skyboxT.Sample(skySampler, R);
+    float3 color;
+
     float shadow = ShadowCalculation(input.worldPosLightSpace);
+    if (input.isFrontFace) {
+        color = PBRdir(albedoTex, input.normal, metallic, roughnessTex, ao, direction.xyz, input.camPos, input.worldPos, shadow);
+    }
+    else if (!input.isFrontFace) {
+        color = PBRdir(albedoTex, -input.normal, metallic, roughnessTex, ao, direction.xyz, input.camPos, input.worldPos, shadow);
+    }
+    //color = PBRpoint(albedoTex, input.normal, metallic, roughnessTex, ao, input.camPos, input.camPos, input.worldPos, 0.0f);
+    //color = color / (color + float3(1.0f, 1.0f, 1.0f));
     //reflectColor * (1.0 - specT)
     //float3 LightColor = (ambient + ((diffuse + specular) * attenuation) + reflectColor * (1.0 - specT));
     //return float4(color * (LightColor * intensity), 1.0f);
-    return float4(color * (1.0 - shadow), 1.0f);
+    /*
+    if (!input.isFrontFace) {
+        float3 vLight = input.camPos + direction.xyz;
+        float fEdotL = saturate(dot(input.camPos, vLight.xyz));
+        //float fPowEdotL = fEdotL * fEdotL;
+        //fPowEdotL *= fPowEdotL;
+        // Back diffuse shading, wrapped slightly
+        float fLdotNBack = saturate(dot(-input.normal.xyz, vLight.xyz));
+        // Allow artists to tweak view dependency.
+        float3 vBackShading = fLdotNBack * fEdotL;
+        return float4(vBackShading, 1.0f);
+    }
+    */
+    return float4(color, 1.0f);
+    
     //return float4(1.0f, 0.0f, 1.0f, 1.0f);
     //return float4(reflectColor, 1.0f);
 	//return float4(input.uv.x,input.uv.y,0.0f,1.0f);

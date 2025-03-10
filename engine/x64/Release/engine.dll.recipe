@@ -7,6 +7,9 @@
   </ProjectOutputs>
   <ContentFiles>
     <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\Blur.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\pixelShader.cso</FullPath>
     </ContentFile>
     <ContentFile>
@@ -26,6 +29,12 @@
     </ContentFile>
     <ContentFile>
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\skyboxVertexShader.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\TerrainPS.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\TerrainVS.cso</FullPath>
     </ContentFile>
     <ContentFile>
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\tessellationDomainShader.cso</FullPath>

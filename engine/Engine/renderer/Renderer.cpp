@@ -1,6 +1,7 @@
 #include "Renderer.h"
 #include"Texture.h"
 #include"../scene/Entity.h"
+#include"../audio/AudioDevice.h"
 
 Camera camera(glm::vec3(10.0f, -1.8f, 0.0f));
 float deltaTime = 0;
@@ -133,8 +134,8 @@ void Renderer::InitRenderer(int width, int height, HWND hWnd)
     
     D3D11_TEXTURE2D_DESC shadowMapDesc;
     //ZeroMemory(&shadowMapDesc, sizeof(D3D11_TEXTURE2D_DESC));
-    shadowMapDesc.Width = 1024;
-    shadowMapDesc.Height = 1024;
+    shadowMapDesc.Width = 2048;
+    shadowMapDesc.Height = 2048;
     shadowMapDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
     shadowMapDesc.Format = DXGI_FORMAT_R32_TYPELESS;
     shadowMapDesc.ArraySize = 1;
@@ -205,7 +206,7 @@ void RenderShadows() {
 void Renderer::RenderLoop(int width, int height)
 {
     if (!init) { return; }
-    /*
+    
     cPhysicsSystem physicsSystem;
     JPH::BoxShapeSettings floor_shape_settings(JPH::Vec3(100.0f, 1.0f, 100.0f));
     floor_shape_settings.SetEmbedded(); // A ref counted object on the stack (base class RefTarget) should be marked as such to prevent it from being freed when its reference count goes to 0.
@@ -216,7 +217,8 @@ void Renderer::RenderLoop(int width, int height)
 
     // Create the settings for the body itself. Note that here you can also set other properties like the restitution / friction.
     JPH::BodyCreationSettings floor_settings(floor_shape, JPH::RVec3(0.0f, -1.0f, 0.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Static, Layers::NON_MOVING);
-    JPH::BodyCreationSettings sphere_settings(new JPH::SphereShape(0.5f), JPH::RVec3(0.0F, 2.0f, 0.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
+    JPH::BodyCreationSettings sphere_settings(new JPH::SphereShape(0.5f), JPH::RVec3(0.0F, 200.0f, 0.0f), JPH::Quat::sIdentity(), JPH::EMotionType::Dynamic, Layers::MOVING);
+
 
 
     Rigidbody planeBody(floor_settings);
@@ -225,7 +227,7 @@ void Renderer::RenderLoop(int width, int height)
 
     physicsSystem.AddRigidbody(planeBody);
     physicsSystem.AddRigidbody(sphereBody);
-    */
+    
     MaterialManager matManager;
 
     MaterialManager::Material mat_1;
@@ -246,17 +248,24 @@ void Renderer::RenderLoop(int width, int height)
     //lModel.LoadModel("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/sea-keep-lonely-watcher/source/Stronghold.fbx");
     //Model lModel;
 
-    ID3D11VertexShader* skyVertexShader = nullptr;
-    ID3D11PixelShader* skyPixelShader = nullptr;
-    ID3D11VertexShader* ppVertexShader = nullptr;
-    ID3D11PixelShader* ppPixelShader = nullptr;
-    ID3D11VertexShader* shadowVertexShader = nullptr;
+    //ID3D11VertexShader* skyVertexShader = nullptr;
+    //ID3D11PixelShader* skyPixelShader = nullptr;
+    //ID3D11VertexShader* ppVertexShader = nullptr;
+    //ID3D11PixelShader* ppPixelShader = nullptr;
+    //ID3D11VertexShader* shadowVertexShader = nullptr;
+    ID3D11PixelShader* blurPixelShader = nullptr;
+
+    ID3D11VertexShader* terrainVertexShader = nullptr;
+    ID3D11PixelShader* terrainPixelShader = nullptr;
     
     Entity entity2("Thing", Entity::EntityType::MODEL);
+    Entity map("map", Entity::EntityType::MODEL);
     Entity Bistro("Bistro", Entity::EntityType::MODEL);
     Entity skyCube("Skybox", Entity::EntityType::MODEL);
+    Entity physCube("PhysicsCube", Entity::EntityType::MODEL);
     Entity mask("maskman", Entity::EntityType::MODEL);
     Entity quad("quad", Entity::EntityType::MODEL);
+    Entity quad3("quad3", Entity::EntityType::MODEL);
     ID3DBlob* vsBlob;
     ID3DBlob* SvsBlob;
     ID3DBlob* hsBlob;
@@ -266,23 +275,56 @@ void Renderer::RenderLoop(int width, int height)
     ID3DBlob* skyPS;
     ID3DBlob* ppVS;
     ID3DBlob* ppPS;
+    ID3DBlob* blurPS;
+
+    ID3DBlob* tVS;
+    ID3DBlob* tPS;
+
     skyCube.matManager = matManager;
     skyCube.model.matManager = matManager;
-    //map0.model.LoadModelFromPAK("map0.obj", m_device, m_deviceContext);
-    entity2.model.LoadModelFromPAK("50x50Plane.obj", m_device, m_deviceContext);
+    //map.model.LoadModel("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/map0.obj", m_device, m_deviceContext);
+    //map.frustumCulling = false;
+    //map0.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    //map.useMaterials = true;
+    //entity2.model.LoadModelFromPAK("50x50Plane.obj", m_device, m_deviceContext);
     mask.model.LoadModelFromPAK("mental.obj", m_device, m_deviceContext);
-    quad.model.LoadModelFromPAK("quad2.obj", m_device, m_deviceContext);
+    //quad.model.LoadModelFromPAK("quad2.obj", m_device, m_deviceContext);
     Bistro.model.LoadModel("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/BistroExterior.fbx", m_device, m_deviceContext);
+    quad3.model.LoadModel("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/quad3.obj", m_device, m_deviceContext);
+    quad3.useMaterials = false;
+    quad3.setPosition(glm::vec3(-6.0f, 3.0f, -2.0f));
+    //quad3.setRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
     Bistro.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     Bistro.setRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
     Bistro.setScale(glm::vec3(0.01f, 0.01f, 0.01f));
     Bistro.useMaterials = true;
     skyCube.model.LoadModelFromPAK("cube.obj", m_device, m_deviceContext);
     skyCube.model.loadMaterials = false;
+    physCube.model.LoadModelFromPAK("cube.obj", m_device, m_deviceContext);
+    physCube.model.loadMaterials = false;
+    //currentActiveScene->AddEntity(&map);
     //currentActiveScene->AddEntity(&entity2);
     //currentActiveScene->AddEntity(&mask);
+    currentActiveScene->AddEntity(&quad3);
     currentActiveScene->AddEntity(&Bistro);
-    //currentActiveScene->AddEntity(&skyCube);
+    //currentActiveScene->AddEntity(&physCube);
+
+    Shader pbrShader("PBR");
+    Shader skyboxShader("Skybox");
+    Shader postprocessShader("PostProcessing");
+    Shader shadowShader("Shadow");
+
+    shadowShader.SetVertexShader("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/ShadowVertexShader.cso", m_device, m_deviceContext);
+    
+    postprocessShader.SetVertexShader("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/PPvertexShader.cso", m_device, m_deviceContext);
+    postprocessShader.SetPixelShader("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/PPpixelShader.cso", m_device, m_deviceContext);
+
+    skyboxShader.SetVertexShader("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/skyboxVertexShader.cso", m_device, m_deviceContext);
+    skyboxShader.SetPixelShader("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/skyboxPixelShader.cso", m_device, m_deviceContext);
+
+    pbrShader.SetVertexShader("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/vertexShader.cso", m_device, m_deviceContext);
+    pbrShader.SetPixelShader("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/pixelShader.cso", m_device, m_deviceContext);
+
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/vertexShader.cso", &vsBlob);
 
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/ShadowVertexShader.cso", &SvsBlob);
@@ -293,18 +335,26 @@ void Renderer::RenderLoop(int width, int height)
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/skyboxPixelShader.cso", &skyPS);
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/PPvertexShader.cso", &ppVS);
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/PPpixelShader.cso", &ppPS);
+    D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/Blur.cso", &blurPS);
 
-    m_device->CreateVertexShader(skyVS->GetBufferPointer(), skyVS->GetBufferSize(), nullptr, &skyVertexShader);
-    m_device->CreatePixelShader(skyPS->GetBufferPointer(), skyPS->GetBufferSize(), nullptr, &skyPixelShader);
+    D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/TerrainVS.cso", &tVS);
+    D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/TerrainPS.cso", &tPS);
 
-    m_device->CreateVertexShader(ppVS->GetBufferPointer(), ppVS->GetBufferSize(), nullptr, &ppVertexShader);
-    m_device->CreatePixelShader(ppPS->GetBufferPointer(), ppPS->GetBufferSize(), nullptr, &ppPixelShader);
+    m_device->CreateVertexShader(tVS->GetBufferPointer(), tVS->GetBufferSize(), nullptr, &terrainVertexShader);
+    m_device->CreatePixelShader(tPS->GetBufferPointer(), tPS->GetBufferSize(), nullptr, &terrainPixelShader);
 
-    m_device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader);
-    m_device->CreateVertexShader(SvsBlob->GetBufferPointer(), SvsBlob->GetBufferSize(), nullptr, &shadowVertexShader);
+    //m_device->CreateVertexShader(skyVS->GetBufferPointer(), skyVS->GetBufferSize(), nullptr, &skyVertexShader);
+    //m_device->CreatePixelShader(skyPS->GetBufferPointer(), skyPS->GetBufferSize(), nullptr, &skyPixelShader);
+
+    //m_device->CreateVertexShader(ppVS->GetBufferPointer(), ppVS->GetBufferSize(), nullptr, &ppVertexShader);
+   //m_device->CreatePixelShader(ppPS->GetBufferPointer(), ppPS->GetBufferSize(), nullptr, &ppPixelShader);
+    m_device->CreatePixelShader(blurPS->GetBufferPointer(), blurPS->GetBufferSize(), nullptr, &blurPixelShader);
+
+    //m_device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader);
+    //m_device->CreateVertexShader(SvsBlob->GetBufferPointer(), SvsBlob->GetBufferSize(), nullptr, &shadowVertexShader);
     m_device->CreateHullShader(hsBlob->GetBufferPointer(), hsBlob->GetBufferSize(), nullptr, &hullShader);
     m_device->CreateDomainShader(dsBlob->GetBufferPointer(), dsBlob->GetBufferSize(), nullptr, &domainShader);
-    m_device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
+    //m_device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
 
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
@@ -345,7 +395,7 @@ void Renderer::RenderLoop(int width, int height)
     SetD3DStates();
 
     auto viewport = CD3D11_VIEWPORT(0.0f, 0.0f, (float)width, (float)height,0.0f,1.0f);
-    auto shadowViewport = CD3D11_VIEWPORT(0.0f, 0.0f, (float)1024, (float)1024, 0.0f, 1.0f);
+    auto shadowViewport = CD3D11_VIEWPORT(0.0f, 0.0f, (float)2048, (float)2048, 0.0f, 1.0f);
     m_deviceContext->RSSetViewports(1, &viewport);
 
     std::vector<const char*> skyFaces;
@@ -374,6 +424,7 @@ void Renderer::RenderLoop(int width, int height)
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 projection = glm::mat4(1.0f);
     glm::mat4 prevProjection = glm::mat4(1.0f);
+    glm::mat4 prevView = glm::mat4(1.0f);
     glm::mat4 objectMatrix = glm::mat4(1.0f);
     glm::mat4 lightView = glm::mat4(1.0f);
     glm::mat4 lightProjection = glm::mat4(1.0f);
@@ -401,11 +452,36 @@ void Renderer::RenderLoop(int width, int height)
 
     m_deviceContext->PSSetShaderResources(1, 1, &specular->ImageShaderResourceView);
     m_deviceContext->PSSetSamplers(1, 1, &specular->ImageSamplerState);
-
     float tme = 0;
+
+    AudioDevice device;
+    AudioListener listener;
+    AudioSource source(device.device, device.context);
+    source.listener = listener;
+    source.setPosition(10.0f, 2.0f, 5.0f);
+    //source.play("C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/aby_music_stuntm.mp3");
+    source.playM("sewer_air1.wav");
+    source.looping = true;
+
+    //Terrain terrain(257, 257, m_device, m_deviceContext);
+
     while (!finishedRendering)
     {
+        ID3D11ShaderResourceView* nullsrv = nullptr;
+        m_deviceContext->PSSetShaderResources(18, 1, &nullsrv);
+        m_deviceContext->PSSetShaderResources(8, 1, &nullsrv);
+        physicsSystem.isSimulating = true;
         SDLInput();
+        listener.setPosition(camera.Position);
+        listener.setRotation(camera.Front, camera.WorldUp);
+        source.listener = listener;
+
+        //Entity* physCubeEnt = nullptr;
+        //physCubeEnt = currentActiveScene->GetEntity(&physCube);
+        //glm::vec3 physPos = glm::vec3(physicsSystem.GetRigidbody(sphereBody).position.GetX(), physicsSystem.GetRigidbody(sphereBody).position.GetY(), physicsSystem.GetRigidbody(sphereBody).position.GetZ());
+        //glm::vec3 physRot = glm::vec3(physicsSystem.GetRigidbody(sphereBody).rotation.GetX(), physicsSystem.GetRigidbody(sphereBody).rotation.GetY(), physicsSystem.GetRigidbody(sphereBody).rotation.GetZ());
+        //physCubeEnt->setPosition(physPos);
+        //physCubeEnt->setRotation(physRot);
 
         m_deviceContext->OMSetRenderTargets(1u, &m_renderTargetView, m_depthStencilView);
 
@@ -417,10 +493,10 @@ void Renderer::RenderLoop(int width, int height)
         float camX = std::sin(tme) * radius;
         float camZ = std::cos(tme) * radius;
         //view = glm::lookAtRH(glm::vec3(camX, 1.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        glm::vec3 lightDir = camera.Position + glm::vec3(0.0f, -1.0f, 0.5f);
+        //glm::vec3 lightDir = camera.Position + glm::vec3(0.0f, -1.0f, 0.5f);
         view = camera.GetViewMatrix();
         //view = glm::lookAt(glm::vec3(4.0f, -1.0f, 0.5f), lightDir, glm::vec3(0, 1, 0));
-        projection = glm::perspectiveRH_ZO(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 10000.0f);
+        projection = glm::perspectiveRH_ZO(glm::radians(camera.Fov), (float)width / (float)height, 0.01f, 10000.0f);
         //projection = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, 0.1f, 10000.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -430,6 +506,7 @@ void Renderer::RenderLoop(int width, int height)
         glm::mat4(glm::mat3(view)),
         projection,
         lightSpaceMatrix,
+        //DirectX::XMMATRIX(),
         camera.Position
         };
 
@@ -454,10 +531,11 @@ void Renderer::RenderLoop(int width, int height)
         m_deviceContext->IASetInputLayout(skyboxInputLayout);
         //m_deviceContext->HSSetShader(nullptr, nullptr, 0);
         //m_deviceContext->DSSetShader(nullptr, nullptr, 0);
-        m_deviceContext->VSSetShader(skyVertexShader, nullptr, 0);
-        m_deviceContext->PSSetShader(skyPixelShader, nullptr, 0);
+        m_deviceContext->VSSetShader(skyboxShader.vertexShader, nullptr, 0);
+        m_deviceContext->PSSetShader(skyboxShader.pixelShader, nullptr, 0);
         m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
-        skyCube.DrawModel(m_deviceContext, m_device);
+        skyCube.frustumCulling = false;
+        skyCube.DrawModel(m_deviceContext, m_device, camera.cameraFrustum, false);
 
         //m_deviceContext->DSSetShaderResources(0, 1, &heightMap->ImageShaderResourceView);
         //m_deviceContext->DSSetSamplers(0, 1, &heightMap->ImageSamplerState);
@@ -470,14 +548,61 @@ void Renderer::RenderLoop(int width, int height)
         m_deviceContext->ClearDepthStencilView(m_shadowDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
         //glm::vec3(4.0f, -1.0f, 0.5f)
 
-        lightView = glm::lookAt(camera.Position, lightDir, glm::vec3(0, 1, 0));
-        lightProjection = glm::orthoLH_ZO(-20.0f, 20.0f, -20.0f, 20.0f, 1.0f, 100.0f);
-        
-        lightSpaceMatrix = lightProjection * lightView;
+
+        glm::vec3 lightDir = camera.Position + glm::vec3(0.0f, -1.0f, 0.5f);
+        glm::vec3 lightDir2 = glm::vec3(0.0f, -1.0f, 0.5f);
+        glm::mat4 lightDirMatrix = glm::lookAt(camera.Position, lightDir2, glm::vec3(0, 1, 0));
+        lightView = glm::lookAtLH(camera.Position, lightDir, glm::vec3(0, 1, 0));
+        glm::vec3 cameraLightVector = camera.Position - glm::vec3(lightDir2.x, lightDir2.y, lightDir2.z);
+        /*
+        glm::mat4 M = glm::mat4(1.0f);
+
+        float NearZ = 0.01f;
+        float FarZ = 200.0f;
+        float ViewWidth = 20.0f;
+        float ViewHeight = 20.0f;
+
+        float fRange = 1.0f / (FarZ - NearZ);
+
+        M[0][0] = 2.0f / ViewWidth;
+        M[0][1] = 0.0f;
+        M[0][2] = 0.0f;
+        M[0][3] = 0.0f;
+
+        M[1][0] = 0.0f;
+        M[1][1] = 2.0f / ViewHeight;
+        M[1][2] = 0.0f;
+        M[1][3] = 0.0f;
+
+        M[2][0] = 0.0f;
+        M[2][1] = 0.0f;
+        M[2][2] = fRange;
+        M[2][3] = 0.0f;
+
+        M[3][0] = 0.0f;
+        M[3][1] = 0.0f;
+        M[3][2] = -fRange * NearZ;
+        M[3][3] = 1.0f;
+        */
+        lightProjection = glm::orthoLH(-20.0f, 20.0f, -20.0f, 20.0f, 0.01f, 200.0f);
+        //lightProjection = M;
+
+        // scuffed garbage to fix shadows maybe
+
+        DirectX::XMVECTOR camPosXM = DirectX::XMVectorSet(camera.Position.x, camera.Position.y, camera.Position.z, 1.0f);
+        DirectX::XMVECTOR lightDirXM = DirectX::XMVectorSet(lightDir.x, lightDir.y, lightDir.z, 1.0f);
+        DirectX::XMVECTOR upXM = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+        DirectX::XMMATRIX lightview = DirectX::XMMatrixLookAtLH(camPosXM, lightDirXM, upXM);
+        DirectX::XMMATRIX lightproj = DirectX::XMMatrixOrthographicLH(20.0f, 20.0f, 1.0f, 1000.0f);
+
+        //DirectX::XMMATRIX lsm = lightproj * lightview;
+        //lightProjection = glm::perspectiveRH_ZO(glm::radians(camera.Zoom), 1.0f, 0.1f, 1000.0f);
+        //lightSpaceMatrix = lightView * lightProjection;
+        Bistro.useMaterials = false;
         for (int i = 0; i < currentActiveScene->sceneObjects.size(); i++) {
             currentActiveScene->sceneObjects[i]->UpdateMatrixes(lightView, lightProjection, camera.Position);
 
-            SconstantBuffer cb = {
+            SconstantBuffer scb = {
                 currentActiveScene->sceneObjects[i]->Matmodel,
                 lightView,
                 lightProjection
@@ -489,10 +614,10 @@ void Renderer::RenderLoop(int width, int height)
             cbd.Usage = D3D11_USAGE_DYNAMIC;
             cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
             cbd.MiscFlags = 0u;
-            cbd.ByteWidth = sizeof(cb);
+            cbd.ByteWidth = sizeof(scb);
             cbd.StructureByteStride = 0u;
             D3D11_SUBRESOURCE_DATA csd = {};
-            csd.pSysMem = &cb;
+            csd.pSysMem = &scb;
 
             m_device->CreateBuffer(&cbd, &csd, &constantBuffer);
             m_deviceContext->VSSetConstantBuffers(0, 1, &constantBuffer);
@@ -514,23 +639,24 @@ void Renderer::RenderLoop(int width, int height)
             //m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
 
             m_deviceContext->IASetInputLayout(inputLayout);
-            m_deviceContext->VSSetShader(shadowVertexShader, nullptr, 0);
+            m_deviceContext->VSSetShader(shadowShader.vertexShader, nullptr, 0);
             //m_deviceContext->HSSetShader(hullShader, nullptr, 0);
             //m_deviceContext->DSSetShader(domainShader, nullptr, 0);
             m_deviceContext->PSSetShader(nullptr, nullptr, 0);
             //Rendering stuff under this
-            //currentActiveScene->sceneObjects[i]->model.GetClosestVertex(camera.Position)
+            //currentActiveScene->sceneObjects[i]->model.GetClosestVertex(camera.Position);
             currentActiveScene->sceneObjects[i]->Update();
-            currentActiveScene->sceneObjects[i]->DrawModel(m_deviceContext, m_device);
+            currentActiveScene->sceneObjects[i]->DrawModel(m_deviceContext, m_device,camera.cameraFrustum, false);
         }
+        Bistro.useMaterials = true;
         m_deviceContext->RSSetViewports(1, &viewport);
         m_deviceContext->OMSetRenderTargets(0, nullptr, nullptr);
         m_deviceContext->OMSetRenderTargets(1u, &m_renderTargetView, m_depthStencilView);
         m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
         view = camera.GetViewMatrix();
-        projection = glm::perspectiveRH_ZO(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 10000.0f);
-
+        projection = glm::perspectiveRH_ZO(glm::radians(camera.Fov), (float)width / (float)height, 0.01f, 10000.0f);
+        camera.createFrustumFromCamera((float)width / (float)height, glm::radians(camera.Fov), 0.01f, 10000.0f);
         //m_deviceContext->CopyResource(m_shadowMap2, m_shadowMap);
         ID3D11SamplerState* ImageSamplerState2 = nullptr;
         D3D11_SAMPLER_DESC ImageSamplerDesc2 = {};
@@ -540,10 +666,10 @@ void Renderer::RenderLoop(int width, int height)
         ImageSamplerDesc2.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
         ImageSamplerDesc2.MipLODBias = 0.0f;
         ImageSamplerDesc2.MaxAnisotropy = 1;
-        ImageSamplerDesc2.BorderColor[0] = 0;
-        ImageSamplerDesc2.BorderColor[1] = 0;
-        ImageSamplerDesc2.BorderColor[2] = 0;
-        ImageSamplerDesc2.BorderColor[3] = 0;
+        ImageSamplerDesc2.BorderColor[0] = 1.0f;
+        ImageSamplerDesc2.BorderColor[1] = 1.0f;
+        ImageSamplerDesc2.BorderColor[2] = 1.0f;
+        ImageSamplerDesc2.BorderColor[3] = 1.0f;
         ImageSamplerDesc2.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
         ImageSamplerDesc2.MinLOD = 0;
         ImageSamplerDesc2.MaxLOD = D3D11_FLOAT32_MAX;
@@ -556,15 +682,19 @@ void Renderer::RenderLoop(int width, int height)
 
         for (int i = 0; i < currentActiveScene->sceneObjects.size(); i++) {
             currentActiveScene->sceneObjects[i]->UpdateMatrixes(view, projection, camera.Position);
-
+            
             //objectMatrix = currentActiveScene->sceneObjects[i]->Matmodel * view * projection;
             //lightSpaceMatrix = lightProjection * lightView;
-            ConstantBuffer cb = {
+            ConstantBuffer2 cb = {
                 currentActiveScene->sceneObjects[i]->Matmodel,
                 view,
                 projection,
-                lightSpaceMatrix,
-                camera.Position
+                //lightSpaceMatrix,
+                //lsm,
+                lightView,
+                lightProjection,
+                camera.Position,
+                0.0f
             };
 
 
@@ -591,7 +721,7 @@ void Renderer::RenderLoop(int width, int height)
             playerLight.setAmbientColor(glm::vec3(0.1f, 0.1f, 0.1f));
             playerLight.intensity = 1;
             playerLight.UpdateLightBuffer(m_device, m_deviceContext);
-
+           
 
             //m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0u);
             //D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST
@@ -599,24 +729,45 @@ void Renderer::RenderLoop(int width, int height)
             //m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
 
             m_deviceContext->IASetInputLayout(inputLayout);
-            m_deviceContext->VSSetShader(vertexShader, nullptr, 0);
+            m_deviceContext->VSSetShader(pbrShader.vertexShader, nullptr, 0);
             //m_deviceContext->HSSetShader(hullShader, nullptr, 0);
             //m_deviceContext->DSSetShader(domainShader, nullptr, 0);
-            m_deviceContext->PSSetShader(pixelShader, nullptr, 0);
-
+            m_deviceContext->PSSetShader(pbrShader.pixelShader, nullptr, 0);
 
             //Rendering stuff under this
             //currentActiveScene->sceneObjects[i]->model.GetClosestVertex(camera.Position)
             currentActiveScene->sceneObjects[i]->Update();
-            currentActiveScene->sceneObjects[i]->DrawModel(m_deviceContext, m_device);
+            currentActiveScene->sceneObjects[i]->DrawModel(m_deviceContext, m_device,camera.cameraFrustum, true);
         }
+
+        glm::mat4 terrainModel = glm::mat4(0.0f);
+        terrainModel = glm::translate(terrainModel, glm::vec3(0.0f, 0.0f, 0.0f));
+        terrainModel = glm::rotate(terrainModel, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        terrainModel = glm::scale(terrainModel, glm::vec3(1.0f, 1.0f, 1.0f));
+
+        Terrain::ConstBuffer constBuf = {
+            terrainModel,
+            view,
+            projection,
+            camera.Position,
+            0.0f
+        };
+
+        //m_deviceContext->IASetInputLayout(inputLayout);
+        //terrain.DrawTerrain(constBuf, terrainVertexShader, terrainPixelShader, m_deviceContext, m_device);
         
+
         m_deviceContext->CopyResource(m_renderTexture, m_renderTexture2);
+        //m_deviceContext->CopyResource(m_bloomTexture2, m_renderTexture);
         m_deviceContext->CopyResource(m_depthTexture, m_depthBuffer);
         m_deviceContext->PSSetShaderResources(14, 1, &m_depthSRV);
+        
+        //m_deviceContext->PSSetShaderResources(15, 1, &blurSRV);
         m_deviceContext->PSSetShaderResources(15, 1, &m_rtSRV);
         m_deviceContext->PSSetSamplers(14, 1, &albedo->ImageSamplerState);
-        
+
+        m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
         m_deviceContext->OMSetRenderTargets(1u, &m_renderTargetView2, m_depthStencilView);
         float quadVertices[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
         -1.0f,  1.0f,  0.0f, 0.0f,
@@ -628,7 +779,7 @@ void Renderer::RenderLoop(int width, int height)
          1.0f,  1.0f,  1.0f, 0.0f
         };
       
-        m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+        //m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
         ID3D11Buffer* vertexBuffer = nullptr;
         D3D11_BUFFER_DESC vertexBufferDesc = {};
@@ -643,14 +794,21 @@ void Renderer::RenderLoop(int width, int height)
 
         UINT stride = sizeof(Vertex2);
         UINT offset = 0;
-        
+
+        //m_deviceContext->OMSetRenderTargets(1u, &m_renderTargetView2, m_depthStencilView);
+        m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
         PostProcessBuffer pcb = {
+            prevView,
             prevProjection,
-            (view * projection),
+            view,
+            projection,
+            cameraLightVector,
+           //(glm::inverse(view) * glm::inverse(projection)),
             camera.Position,
+            0.0f,
+            0.0f
         };
-
-
         ID3D11Buffer* pconstantBuffer;
         D3D11_BUFFER_DESC pcbd;
         pcbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -673,13 +831,12 @@ void Renderer::RenderLoop(int width, int height)
         m_deviceContext->IASetInputLayout(ppinputLayout);
         //m_deviceContext->HSSetShader(nullptr, nullptr, 0);
         //m_deviceContext->DSSetShader(nullptr, nullptr, 0);
-        m_deviceContext->VSSetShader(ppVertexShader, nullptr, 0);
-        m_deviceContext->PSSetShader(ppPixelShader, nullptr, 0);
+        m_deviceContext->VSSetShader(postprocessShader.vertexShader, nullptr, 0);
+        m_deviceContext->PSSetShader(postprocessShader.pixelShader, nullptr, 0);
         //quad.DrawModel(m_deviceContext, m_device);
         m_deviceContext->Draw(6, 0);
         //prevProjection = (view * projection);
         m_swapChain->Present(1, 0);
-
         LAST = NOW;
         NOW = SDL_GetPerformanceCounter();
 
@@ -688,10 +845,14 @@ void Renderer::RenderLoop(int width, int height)
         std::cout << 1.0f / deltaTime << '\n';
         skyConstantBuffer->Release();
         //vertexBuffer->Release();
+
+        prevProjection = projection;
+        prevView = view;
+
     }
     //vertexBuffer->Release();
-    vertexShader->Release();
-    pixelShader->Release();
+    //vertexShader->Release();
+    //pixelShader->Release();
     m_renderTargetView->Release();
     SDL_Quit();
 }
@@ -706,7 +867,7 @@ void Renderer::SetD3DStates()
         D3D11_FILL_SOLID,
         D3D11_CULL_NONE,
         true,
-        0, 0, 0, 0,
+        1, 0, 0, false,
         false, false, false);
     m_device->CreateRasterizerState(&rasterizerDesc, &m_rasterizerState);
 
@@ -724,7 +885,7 @@ void Renderer::CreateRenderWindow(int width, int height, bool fullscreen)
     }
     else if (fullscreen)
     {
-        window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_FULLSCREEN_DESKTOP);
+        window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_FULLSCREEN);
     }
     window = SDL_CreateWindow("Render Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, window_flags);
     if (window == nullptr)
@@ -777,10 +938,10 @@ void Renderer::EditorRenderLoop(int width, int height,  HWND hwnd) {
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/tessellationDomainShader.cso", &dsBlob);
     D3DReadFileToBlob(L"C:/Users/Owner/source/repos/Aurora Engine/x64/Release/data/shaders/pixelShader.cso", &psBlob);
 
-    m_device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader);
+    //m_device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &vertexShader);
     m_device->CreateHullShader(hsBlob->GetBufferPointer(), hsBlob->GetBufferSize(), nullptr, &hullShader);
     m_device->CreateDomainShader(dsBlob->GetBufferPointer(), dsBlob->GetBufferSize(), nullptr, &domainShader);
-    m_device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
+    //m_device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &pixelShader);
 
     D3D11_INPUT_ELEMENT_DESC layout[] = {
         {"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA},
@@ -825,7 +986,7 @@ void Renderer::EditorRenderLoop(int width, int height,  HWND hwnd) {
     m_deviceContext->PSSetSamplers(0, 1, &diffuse->ImageSamplerState);
     m_deviceContext->PSSetShaderResources(1, 1, &specular->ImageShaderResourceView);
     m_deviceContext->PSSetSamplers(1, 1, &specular->ImageSamplerState);
-
+    
     float tme = 0;
     Edshouldberendering = true;
     while (Edshouldberendering) {
@@ -838,17 +999,19 @@ void Renderer::EditorRenderLoop(int width, int height,  HWND hwnd) {
         float camZ = std::cos(tme) * radius;
         //view = glm::lookAtRH(glm::vec3(camX, 1.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         view = camera.GetViewMatrix();
-        projection = glm::perspectiveRH_ZO(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 10000.0f);
+        projection = glm::perspectiveRH_ZO(glm::radians(camera.Fov), (float)width / (float)height, 0.1f, 10000.0f);
 
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
         objectMatrix = model * view * projection;
+        
         ConstantBuffer cb = {
             model,
             glm::mat4(glm::mat3(camera.GetViewMatrix())),
             projection,
             lightSpaceMatrix,
+            //DirectX::XMMATRIX()
             camera.Position
         };
 
@@ -894,10 +1057,10 @@ void Renderer::EditorRenderLoop(int width, int height,  HWND hwnd) {
         m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
         m_deviceContext->IASetInputLayout(inputLayout);
-        m_deviceContext->VSSetShader(vertexShader, nullptr, 0);
+        //m_deviceContext->VSSetShader(vertexShader, nullptr, 0);
         //m_deviceContext->HSSetShader(hullShader, nullptr, 0);
         //m_deviceContext->DSSetShader(domainShader, nullptr, 0);
-        m_deviceContext->PSSetShader(pixelShader, nullptr, 0);
+        //m_deviceContext->PSSetShader(pixelShader, nullptr, 0);
 
         //m_deviceContext->PSSetShaderResources(0, 1, &diffuse->ImageShaderResourceView);
         //m_deviceContext->PSSetSamplers(0, 1, &diffuse->ImageSamplerState);
@@ -929,8 +1092,8 @@ void Renderer::EditorRenderLoop(int width, int height,  HWND hwnd) {
 
         m_swapChain->Present(1, 0);
     }
-    vertexShader->Release();
-    pixelShader->Release();
+    //vertexShader->Release();
+    //pixelShader->Release();
     //m_renderTargetView->Release();
     //SDL_Quit();
 }

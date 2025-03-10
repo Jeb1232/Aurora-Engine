@@ -112,6 +112,20 @@ void AudioSource::setVelocity(float x, float y, float z)
 	velocity[2] = z;
 }
 
+void AudioSource::setMinDistance(float minDist) 
+{
+	minDistance = minDist;
+}
+
+void AudioSource::setMaxDistance(float maxDist)
+{
+	maxDistance = maxDist;
+}
+
+void AudioSource::setRollOffFactor(float factor) {
+	rolloffFactor = factor;
+}
+
 /*
         std::string filename = "your-sound-file.wav";
         std::vector<char> fileData = loadFileIntoMemory(filename);
@@ -308,6 +322,8 @@ void AudioSource::playBuf(ALuint buffer) {
 
 	alSourcei(source, AL_BUFFER, buffer);
 
+	alDistanceModel(AL_EXPONENT_DISTANCE_CLAMPED);
+
 	// Play the sound
 	alSourcePlay(source);
 
@@ -320,6 +336,9 @@ void AudioSource::playBuf(ALuint buffer) {
 		alSourcefv(source, AL_POSITION, position);
 		alSourcefv(source, AL_VELOCITY, velocity);
 		alSourcei(source, AL_LOOPING, looping);
+		alSourcef(source, AL_ROLLOFF_FACTOR, rolloffFactor);
+		alSourcef(source, AL_REFERENCE_DISTANCE, minDistance);
+		alSourcef(source, AL_MAX_DISTANCE, maxDistance);
 		alListenerfv(AL_POSITION, listener.position);
 		alListenerfv(AL_VELOCITY, listener.velocity);
 		alListenerfv(AL_ORIENTATION, listener.orientation);

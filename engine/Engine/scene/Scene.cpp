@@ -15,3 +15,11 @@ void Scene::AddEntity(Entity* ent) {
 		sceneObjects.push_back(ent);
 	}
 }
+
+Entity* Scene::GetEntity(Entity* ent) {
+	for (int i = 0; i < sceneObjects.size(); i++) {
+		if (sceneObjects[i] == ent) {
+			return sceneObjects[i];
+		}
+	}
+}

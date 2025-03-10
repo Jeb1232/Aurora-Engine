@@ -19,9 +19,10 @@ cbuffer CBuf {
 Output main(Input input) {
 	Output output;
 	float4 position;
-	float4 worldPos;
+	float3 worldPos;
 	position = float4(input.position, 1.0f);
 	worldPos = mul(modelMatrix, position);
+
 
 	output.position = mul(modelMatrix, position);
 	output.position = mul(viewMatrix, output.position);

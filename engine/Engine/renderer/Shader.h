@@ -9,6 +9,7 @@
 class Shader
 {
 public:
+	/*
 	enum ShaderType {
 		Vertex,
 		Pixel,
@@ -17,11 +18,20 @@ public:
 		Geometry,
 		Compute
 	};
-	Shader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext, ShaderType type);
+	*/
+	Shader(std::string shaderName);
+
+	void AURORAENGINE_API SetVertexShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
+	void AURORAENGINE_API SetHullShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
+	void AURORAENGINE_API SetDomainShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
+	void AURORAENGINE_API SetPixelShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
+	void AURORAENGINE_API SetGeometryShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
+	void AURORAENGINE_API SetComputeShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
+
 	~Shader();
 
-	ID3DBlob* sBlob;
-
+	std::string name;
+	ID3DBlob* sBlob = nullptr;
 	ID3D11VertexShader* vertexShader = nullptr;
 	ID3D11HullShader* hullShader = nullptr;
 	ID3D11DomainShader* domainShader = nullptr;

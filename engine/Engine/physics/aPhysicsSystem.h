@@ -1,5 +1,6 @@
 #pragma once
 #include<iostream>
+#include <cstdarg>
 #include"../dllHeader.h"
 #include<thread>
 #include<Jolt/Jolt.h>
@@ -18,6 +19,34 @@
 //using namespace JPH;
 
 JPH_SUPPRESS_WARNINGS
+
+// Callback for traces, connect this to your own trace function if you have one
+static void TraceImpl(const char* inFMT, ...)
+{
+	// Format the message
+	va_list list;
+	va_start(list, inFMT);
+	char buffer[1024];
+	vsnprintf(buffer, sizeof(buffer), inFMT, list);
+	va_end(list);
+
+	// Print to the TTY
+	std::cout << buffer << std::endl;
+}
+
+#ifdef JPH_ENABLE_ASSERTS
+
+// Callback for asserts, connect this to your own assert handler if you have one
+static bool AssertFailedImpl(const char* inExpression, const char* inMessage, const char* inFile, JPH::uint inLine)
+{
+	// Print to the TTY
+	std::cout << inFile << ":" << inLine << ": (" << inExpression << ") " << (inMessage != nullptr ? inMessage : "") << std::endl;
+
+	// Breakpoint
+	return true;
+};
+
+#endif // JPH_ENABLE_ASSERTS
 
 namespace Layers
 {
@@ -176,18 +205,21 @@ public:
 
 	JPH::PhysicsSystem physicsSystem;
 
-	JPH::TempAllocatorImpl temp_allocator = JPH::TempAllocatorImpl(10 * 1024 * 1024);
+	//JPH::TempAllocatorImpl temp_allocator = JPH::TempAllocatorImpl(10 * 1024 * 1024);
 
 	// We need a job system that will execute physics jobs on multiple threads. Typically
 	// you would implement the JobSystem interface yourself and let Jolt Physics run on top
 	// of your own job scheduler. JobSystemThreadPool is an example implementation.
-	JPH::JobSystemThreadPool job_system = JPH::JobSystemThreadPool(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1);
+	//JPH::JobSystemThreadPool job_system = JPH::JobSystemThreadPool(JPH::cMaxPhysicsJobs, JPH::cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1);
 
 	/*
 	struct sRigidBody {
 		Rigidbody* crigidBody = nullptr;
 	};
 	*/
+
+	bool isSimulating = false;
+
 	std::thread physicsThread;
 
 	//This is the max amount of rigid bodies that you can add to the physics system. If you try to add more you'll get an error.
@@ -209,6 +241,8 @@ public:
 	void AURORAENGINE_API PhysicsLoop();
 
 	void AURORAENGINE_API AddRigidbody(Rigidbody body);
+
+	Rigidbody AURORAENGINE_API GetRigidbody(Rigidbody body);
 private:
 };
 
