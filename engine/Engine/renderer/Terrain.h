@@ -28,7 +28,7 @@ public:
 
 	struct TerrainData {
 		std::vector<Vertex> vertices;
-		std::vector<unsigned short> indices;
+		std::vector<unsigned int> indices;
 		D3D11_BUFFER_DESC vertexBufferDesc = {};
 		D3D11_SUBRESOURCE_DATA vertexData = {};
 		D3D11_BUFFER_DESC ibd = {};

@@ -21,12 +21,12 @@ public:
 	*/
 	Shader(std::string shaderName);
 
-	void AURORAENGINE_API SetVertexShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
-	void AURORAENGINE_API SetHullShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
-	void AURORAENGINE_API SetDomainShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
-	void AURORAENGINE_API SetPixelShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
-	void AURORAENGINE_API SetGeometryShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
-	void AURORAENGINE_API SetComputeShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
+	void SetVertexShader(std::string path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
+	void SetHullShader(std::string path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
+	void SetDomainShader(std::string path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
+	void SetPixelShader(std::string path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
+	void SetGeometryShader(std::string path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
+	void SetComputeShader(std::string path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext);
 
 	~Shader();
 

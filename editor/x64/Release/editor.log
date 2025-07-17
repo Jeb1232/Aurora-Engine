@@ -14,9 +14,8 @@ MainFrame.obj : warning LNK4006: "protected: virtual class wxEventHashTable & __
 MainFrame.obj : warning LNK4006: "protected: virtual struct wxEventTable const * __cdecl RenderPanel::GetEventTable(void)const " (?GetEventTable@RenderPanel@@MEBAPEBUwxEventTable@@XZ) already defined in RenderPanel.obj; second definition ignored
 C:\Users\Owner\source\repos\Aurora Engine\x64\Release\editor\editor.exe : warning LNK4088: image being generated due to /FORCE option; image may not run
   Generating code
-  22 of 168 functions (13.1%) were compiled, the rest were copied from previous compilation.
-    15 functions were new in current compilation
-    1 functions had inline decision re-evaluated but remain unchanged
+  Previous IPDB and IOBJ mismatch, fall back to full compilation.
+  All 170 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   Finished generating code
 * CIL library *(* CIL module *) : warning LNK4006: "private: static struct wxEventTableEntry const * const RenderPanel::sm_eventTableEntries" (?sm_eventTableEntries@RenderPanel@@0QBUwxEventTableEntry@@B) already defined in * CIL library *(* CIL module *); second definition ignored
 * CIL library *(* CIL module *) : warning LNK4006: "protected: static struct wxEventTable const RenderPanel::sm_eventTable" (?sm_eventTable@RenderPanel@@1UwxEventTable@@B) already defined in * CIL library *(* CIL module *); second definition ignored

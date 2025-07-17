@@ -150,7 +150,7 @@ public:
 	// See: ContactListener
 	virtual JPH::ValidateResult	OnContactValidate(const JPH::Body& inBody1, const JPH::Body& inBody2, JPH::RVec3Arg inBaseOffset, const JPH::CollideShapeResult& inCollisionResult) override
 	{
-		//cout << "Contact validate callback" << endl;
+		std::cout << "Contact validate callback" << std::endl;
 
 		// Allows you to ignore a contact before it is created (using layers to not make objects collide is cheaper!)
 		return JPH::ValidateResult::AcceptAllContactsForThisBodyPair;
@@ -158,17 +158,17 @@ public:
 
 	virtual void			OnContactAdded(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings) override
 	{
-		//cout << "A contact was added" << endl;
+		std::cout << "A contact was added" << std::endl;
 	}
 
 	virtual void			OnContactPersisted(const JPH::Body& inBody1, const JPH::Body& inBody2, const JPH::ContactManifold& inManifold, JPH::ContactSettings& ioSettings) override
 	{
-		//cout << "A contact was persisted" << endl;
+		std::cout << "A contact was persisted" << std::endl;
 	}
 
 	virtual void			OnContactRemoved(const JPH::SubShapeIDPair& inSubShapePair) override
 	{
-		//cout << "A contact was removed" << endl;
+		std::cout << "A contact was removed" << std::endl;
 	}
 };
 
@@ -178,12 +178,12 @@ class MyBodyActivationListener : public JPH::BodyActivationListener
 public:
 	virtual void		OnBodyActivated(const JPH::BodyID& inBodyID, JPH::uint64 inBodyUserData) override
 	{
-		//cout << "A body got activated" << endl;
+		std::cout << "A body got activated" << std::endl;
 	}
 
 	virtual void		OnBodyDeactivated(const JPH::BodyID& inBodyID, JPH::uint64 inBodyUserData) override
 	{
-		//cout << "A body went to sleep" << endl;
+		std::cout << "A body went to sleep" << std::endl;
 	}
 };
 
@@ -193,7 +193,7 @@ public:
 	cPhysicsSystem();
 	~cPhysicsSystem();
 
-	BPLayerInterfaceImpl broad_phase_layer_interface;
+	BPLayerInterfaceImpl* broad_phase_layer_interface = nullptr;
 
 	// Create class that filters object vs broadphase layers
 	// Note: As this is an interface, PhysicsSystem will take a reference to this so this instance needs to stay alive!
@@ -203,7 +203,11 @@ public:
 	// Note: As this is an interface, PhysicsSystem will take a reference to this so this instance needs to stay alive!
 	ObjectLayerPairFilterImpl object_vs_object_layer_filter;
 
-	JPH::PhysicsSystem physicsSystem;
+	JPH::TempAllocatorImpl* temp_allocator = nullptr;
+
+	JPH::JobSystemThreadPool* job_system = nullptr;
+
+	JPH::PhysicsSystem* physicsSystem = nullptr;
 
 	//JPH::TempAllocatorImpl temp_allocator = JPH::TempAllocatorImpl(10 * 1024 * 1024);
 
@@ -223,22 +227,22 @@ public:
 	std::thread physicsThread;
 
 	//This is the max amount of rigid bodies that you can add to the physics system. If you try to add more you'll get an error.
-	const int maxBodies = 65536;
+	const JPH::uint maxBodies = 65536;
 	// This determines how many mutexes to allocate to protect rigid bodies from concurrent access. Set it to 0 for the default settings.
-	const int numBodyMutexes = 0;
+	const JPH::uint numBodyMutexes = 0;
 	// This is the max amount of body pairs that can be queued at any time (the broad phase will detect overlapping
 	// body pairs based on their bounding boxes and will insert them into a queue for the narrowphase). If you make this buffer
 	// too small the queue will fill up and the broad phase jobs will start to do narrow phase work. This is slightly less efficient.
-	const int maxBodyPairs = 65536;
+	const JPH::uint maxBodyPairs = 65536;
 	// This is the maximum size of the contact constraint buffer. If more contacts (collisions between bodies) are detected than this
 	// number then these contacts will be ignored and bodies will start interpenetrating / fall through the world.
-	const int maxContactConstraints = 10240;
+	const JPH::uint maxContactConstraints = 10240;
 
-	const float pDeltaTime = 1.0f / 60.0f;
+	const float pDeltaTime = 1.0f / 50.0f;
 
 	std::vector<Rigidbody> rigidBodys;
 
-	void AURORAENGINE_API PhysicsLoop();
+	void AURORAENGINE_API PhysicsStep();
 
 	void AURORAENGINE_API AddRigidbody(Rigidbody body);
 

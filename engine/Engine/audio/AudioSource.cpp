@@ -6,7 +6,6 @@ struct MemoryBuffer {
 	sf_count_t position;
 };
 
-// Custom read function to read from memory
 sf_count_t read_func(void* ptr, sf_count_t count, void* user_data) {
 	MemoryBuffer* memBuffer = static_cast<MemoryBuffer*>(user_data);
 	sf_count_t remaining = memBuffer->size - memBuffer->position;
@@ -18,7 +17,6 @@ sf_count_t read_func(void* ptr, sf_count_t count, void* user_data) {
 	return to_read;
 }
 
-// Custom seek function
 sf_count_t seek_func(sf_count_t offset, int whence, void* user_data) {
 	MemoryBuffer* memBuffer = static_cast<MemoryBuffer*>(user_data);
 	sf_count_t new_position = 0;
@@ -45,15 +43,13 @@ sf_count_t seek_func(sf_count_t offset, int whence, void* user_data) {
 	return new_position;
 }
 
-// Custom tell function
 sf_count_t tell_func(void* user_data) {
 	MemoryBuffer* memBuffer = static_cast<MemoryBuffer*>(user_data);
 	return memBuffer->position;
 }
 
-// Custom write function (not needed, just a placeholder for completeness)
 sf_count_t write_func(const void* ptr, sf_count_t count, void* user_data) {
-	return 0; // Writing is not supported in this case
+	return 0; 
 }
 
 AudioSource::AudioSource(ALCdevice* device, ALCcontext* context)
@@ -125,25 +121,6 @@ void AudioSource::setMaxDistance(float maxDist)
 void AudioSource::setRollOffFactor(float factor) {
 	rolloffFactor = factor;
 }
-
-/*
-        std::string filename = "your-sound-file.wav";
-        std::vector<char> fileData = loadFileIntoMemory(filename);
-        
-        // Initialize memory buffer
-        MemoryBuffer memBuffer = { fileData.data(), static_cast<sf_count_t>(fileData.size()), 0 };
-
-        // Set up virtual I/O for libsndfile
-        SF_VIRTUAL_IO virtualIO;
-        virtualIO.get_filelen = [](void *user_data) -> sf_count_t {
-            MemoryBuffer *memBuffer = static_cast<MemoryBuffer*>(user_data);
-            return memBuffer->size;
-        };
-        virtualIO.read = read_func;
-        virtualIO.seek = seek_func;
-        virtualIO.tell = tell_func;
-        virtualIO.write = write_func; // No write support
-*/
 
 void AudioSource::play(const char* path) 
 {
@@ -331,10 +308,18 @@ void AudioSource::playBuf(ALuint buffer) {
 
 	while (state == AL_PLAYING)
 	{
+
 		alSourcef(source, AL_PITCH, pitch);
 		alSourcef(source, AL_GAIN, volume);
-		alSourcefv(source, AL_POSITION, position);
-		alSourcefv(source, AL_VELOCITY, velocity);
+		if (is3D) {
+			alSourcefv(source, AL_POSITION, position);
+			alSourcefv(source, AL_VELOCITY, velocity);
+		}
+		else if (!is3D) {
+			ALfloat zeroV3[3] = { 0.0f,0.0f,0.0f };
+			alSourcefv(source, AL_POSITION, listener.position);
+			alSourcefv(source, AL_VELOCITY, zeroV3);
+		}
 		alSourcei(source, AL_LOOPING, looping);
 		alSourcef(source, AL_ROLLOFF_FACTOR, rolloffFactor);
 		alSourcef(source, AL_REFERENCE_DISTANCE, minDistance);

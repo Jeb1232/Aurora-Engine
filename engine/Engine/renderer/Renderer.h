@@ -42,7 +42,8 @@ public:
 		float x, y, z;
 		float nx, ny, nz;
 		float u, v;
-		//float tx, ty, tz;
+		float tx, ty, tz;
+		//float btx, bty, btz;
 	};
 	struct Vertex2 {
 		//glm::vec3 pos;
@@ -103,6 +104,22 @@ public:
 		float padding;
 		float padding2;
 	};
+		struct PostProcessBuffer2 {
+			glm::mat4 viewMatrix;
+			glm::mat4 projMatrix;
+		};
+	//nightmare 16 byte alignment
+	struct BloomBuffer {
+		glm::vec3 padding;
+		bool horizontal;
+		bool pad1;
+		bool pad2;
+		bool pad3;
+	};
+	struct skySphereCB {
+		glm::vec3 sunDirection;
+		float padding;
+	};
 	SDL_Window* window;
 	HWND hWindow;
 	SDL_SysWMinfo wmInfo;
@@ -122,6 +139,8 @@ private:
 	IDXGISwapChain* m_swapChain;
 	ID3D11RenderTargetView* m_renderTargetView = nullptr;
 	ID3D11RenderTargetView* m_renderTargetView2 = nullptr;
+	ID3D11RenderTargetView* m_bloomRenderTarget = nullptr;
+	ID3D11RenderTargetView* m_occRenderTarget = nullptr;
 	//ID3D11Buffer* vertexBuffer = nullptr;
 	//ID3D11VertexShader* vertexShader = nullptr;
 	ID3D11HullShader* hullShader = nullptr;
@@ -138,7 +157,12 @@ private:
 	ID3D11Texture2D* m_backBuffer = nullptr;
 	ID3D11Texture2D* m_renderTexture = nullptr;
 	ID3D11Texture2D* m_renderTexture2 = nullptr;
+	ID3D11Texture2D* m_renderTextureOcc = nullptr;
+	ID3D11Texture2D* m_bloomTexture = nullptr;
+	ID3D11Texture2D* m_bloomTexture2 = nullptr;
 	ID3D11ShaderResourceView* m_rtSRV = nullptr;
+	ID3D11ShaderResourceView* m_occSRV = nullptr;
+	ID3D11ShaderResourceView* m_blSRV = nullptr;
 	ID3D11Texture2D* m_depthBuffer = nullptr;
 	ID3D11Texture2D* m_depthTexture = nullptr;
 	ID3D11Texture2D* m_shadowMap = nullptr;

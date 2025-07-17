@@ -5,65 +5,77 @@ Shader::Shader(std::string shaderName) {
 	name = shaderName;
 }
 
-void Shader::SetVertexShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
-	
+void Shader::SetVertexShader(std::string path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+	ID3DBlob* tmpBlob = nullptr;
 
-	D3DReadFileToBlob((LPCWSTR)path, &sBlob);
+	std::wstring widestr = std::wstring(path.begin(), path.end());
 
-	m_device->CreateVertexShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &vertexShader);
+	D3DReadFileToBlob((LPCWSTR)widestr.c_str(), &tmpBlob);
 
-	delete sBlob;
-	sBlob = nullptr;
+
+	m_device->CreateVertexShader(tmpBlob->GetBufferPointer(), tmpBlob->GetBufferSize(), nullptr, &vertexShader);
+
+	delete tmpBlob;
 }
 
-void Shader::SetHullShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+void Shader::SetHullShader(std::string path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+	ID3DBlob* tmpBlob = nullptr;
 
-	D3DReadFileToBlob((LPCWSTR)path, &sBlob);
+	std::wstring widestr = std::wstring(path.begin(), path.end());
 
-	m_device->CreateHullShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &hullShader);
+	D3DReadFileToBlob((LPCWSTR)widestr.c_str(), &tmpBlob);
 
-	delete sBlob;
-	sBlob = nullptr;
+	m_device->CreateHullShader(tmpBlob->GetBufferPointer(), tmpBlob->GetBufferSize(), nullptr, &hullShader);
+
+	delete tmpBlob;
 }
 
-void Shader::SetDomainShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+void Shader::SetDomainShader(std::string path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+	ID3DBlob* tmpBlob = nullptr;
 
-	D3DReadFileToBlob((LPCWSTR)path, &sBlob);
+	std::wstring widestr = std::wstring(path.begin(), path.end());
 
-	m_device->CreateDomainShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &domainShader);
+	D3DReadFileToBlob((LPCWSTR)widestr.c_str(), &tmpBlob);
 
-	delete sBlob;
-	sBlob = nullptr;
+	m_device->CreateDomainShader(tmpBlob->GetBufferPointer(), tmpBlob->GetBufferSize(), nullptr, &domainShader);
+
+	delete tmpBlob;
 }
 
-void Shader::SetPixelShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+void Shader::SetPixelShader(std::string path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+	ID3DBlob* tmpBlob = nullptr;
 
-	D3DReadFileToBlob((LPCWSTR)path, &sBlob);
+	std::wstring widestr = std::wstring(path.begin(), path.end());
 
-	m_device->CreatePixelShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &pixelShader);
+	D3DReadFileToBlob((LPCWSTR)widestr.c_str(), &tmpBlob);
 
-	delete sBlob;
-	sBlob = nullptr;
+	m_device->CreatePixelShader(tmpBlob->GetBufferPointer(), tmpBlob->GetBufferSize(), nullptr, &pixelShader);
+
+	delete tmpBlob;
 }
 
-void Shader::SetGeometryShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+void Shader::SetGeometryShader(std::string path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+	ID3DBlob* tmpBlob = nullptr;
 
-	D3DReadFileToBlob((LPCWSTR)path, &sBlob);
+	std::wstring widestr = std::wstring(path.begin(), path.end());
 
-	m_device->CreateGeometryShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &geomShader);
+	D3DReadFileToBlob((LPCWSTR)widestr.c_str(), &tmpBlob);
 
-	delete sBlob;
-	sBlob = nullptr;
+	m_device->CreateGeometryShader(tmpBlob->GetBufferPointer(), tmpBlob->GetBufferSize(), nullptr, &geomShader);
+
+	delete tmpBlob;
 }
 
-void Shader::SetComputeShader(const char* path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+void Shader::SetComputeShader(std::string path, ID3D11Device* m_device, ID3D11DeviceContext* m_deviceContext) {
+	ID3DBlob* tmpBlob = nullptr;
 
-	D3DReadFileToBlob((LPCWSTR)path, &sBlob);
+	std::wstring widestr = std::wstring(path.begin(), path.end());
 
-	m_device->CreateComputeShader(sBlob->GetBufferPointer(), sBlob->GetBufferSize(), nullptr, &compShader);
+	D3DReadFileToBlob((LPCWSTR)widestr.c_str(), &tmpBlob);
 
-	delete sBlob;
-	sBlob = nullptr;
+	m_device->CreateComputeShader(tmpBlob->GetBufferPointer(), tmpBlob->GetBufferSize(), nullptr, &compShader);
+
+	delete tmpBlob;
 }
 
 Shader::~Shader() {

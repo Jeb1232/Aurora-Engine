@@ -9,6 +9,7 @@ struct Output {
 	float3 camPos : CPOS;
 	//float3 vPos : Position;
 	float3 normal : NORMAL;
+	float3 worldPos : WPOS;
 	float2 uv: UV;
 };
 
@@ -35,6 +36,8 @@ Output main(Input input) {
 
 
 	output.position = mul(modelMatrix, position);
+
+	output.worldPos = mul(modelMatrix, position);
 
 	output.normal = mul((float3x3)modelMatrix, input.normal);
 

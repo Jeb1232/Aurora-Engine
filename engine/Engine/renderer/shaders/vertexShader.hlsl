@@ -1,17 +1,24 @@
 struct Input {
 	float3 position : Position;
 	float3 normal : NORMAL;
-	float2 uv: UV;
+	float2 uv : UV;
+	float3 tangent : TANGENT;
+	//float3 biTangent : BITANGENT;
 };
 
 struct Output {
 	float4 position : SV_POSITION;
 	float3 camPos : CPOS;
 	float3 worldPos : WPOS;
+	float3 camPosTS : CPOSTS;
+	float3 worldPosTS : WPOSTS;
 	float4 worldPosLightSpace : WPOSL;
 	//float3 vPos : Position;
 	float3 normal : NORMAL;
-	float2 uv: UV;
+	float2 uv : UV;
+	float3 tangent : TANGENT;
+	float3 biTangent : BITANGENT;
+	float3x3 TBN : TBNMAT;
 };
 
 cbuffer CBuf {
@@ -39,8 +46,32 @@ Output main(Input input) {
 	//position.xyz += input.normal * height.r * 10;
 	float3 wPos = mul(modelMatrix, position);
 
+	
+
+
+	float3 T = normalize(mul((float3x3)modelMatrix, input.tangent));
+	float3 N = normalize(mul((float3x3)modelMatrix, input.normal));
+	T = normalize(T - dot(T, N) * N);
+	float3 biTangent = cross(input.normal, input.tangent);
+	float3 B = normalize(cross(N, T));
+	//float3 B = normalize(mul((float3x3)modelMatrix, biTangent));
+
+
+	float3x3 TBN2 = float3x3(input.tangent, biTangent, input.normal);
+
+	//Create the "Texture Space"
+	// 
+	float3x3 TBN = float3x3(T, B, N);
+	float3x3 TBN_inv = transpose(TBN);
+
+	output.TBN = TBN;
+
+	output.camPosTS = mul(TBN_inv, cameraPosition);
+	output.worldPosTS = mul(TBN_inv, mul(modelMatrix, position));
+	
 	output.position = mul(modelMatrix, position);
 	output.worldPos = mul(modelMatrix, position);
+
 
 	output.worldPosLightSpace = mul(modelMatrix, position);
 	output.worldPosLightSpace = mul(lightViewMatrix, output.worldPosLightSpace);
@@ -51,9 +82,12 @@ Output main(Input input) {
 	output.position = mul(viewMatrix, output.position);
 	output.position = mul(projectionMatrix, output.position);
 	output.camPos = cameraPosition;
+	
+	output.tangent = mul((float3x3)modelMatrix, input.tangent);
+	output.tangent = normalize(output.tangent);
 
-	//output.tangent = mul((float3x3)modelMatrix, input.tangent);
-	//output.tangent = normalize(output.tangent);
+	output.biTangent = mul((float3x3)modelMatrix, biTangent);
+	output.biTangent = normalize(output.biTangent);
 
 	//output.vPos = output.position.xyz;
 	output.uv = input.uv;

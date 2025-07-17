@@ -33,15 +33,21 @@ void Model::LoadModel(const std::string& path, ID3D11Device* m_device, ID3D11Dev
         aiString str2;
         material->GetTexture(aiTextureType_SPECULAR, 0, &str2);
         aiString str3;
-        material->GetTexture(aiTextureType_NORMALS, 0, &str3);
+        material->GetTexture(aiTextureType_HEIGHT, 0, &str3);
         //std::string tex = material->GetName().C_Str();
         //std::cout << "mat name: " << str.C_Str() << std::endl;
         //std::cout << "mat name Spec: " << str2.C_Str() << std::endl;
-        //std::cout << "mat name Norm: " << str3.C_Str() << std::endl;
+        std::cout << "mat name Norm: " << str3.C_Str() << std::endl;
         newMesh.material = str.C_Str();
         newMesh.materialSpec = str2.C_Str();
         newMesh.materialname = material->GetName().C_Str();
         newMesh.materialNorm = str3.C_Str();
+        if (strlen(str3.C_Str()) == 0) {
+            newMesh.materialNorm = "textures/debugnormal.jpg";
+        }
+        if (strlen(str.C_Str()) == 0) {
+            newMesh.material = "textures/debugempty.png";
+        }
         //newMesh.diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
         //textures.insert(textures.end(), newMesh.diffuseMaps.begin(), newMesh.diffuseMaps.end());
         glm::vec3 minAABB = glm::vec3(std::numeric_limits<float>::max());
@@ -87,7 +93,7 @@ void Model::LoadModel(const std::string& path, ID3D11Device* m_device, ID3D11Dev
                 pos.x, pos.y, pos.z,
                 normal.x, normal.y, normal.z,
                 uv.x, uv.y,
-                //tangent.x,tangent.y,tangent.z,
+                tangent.x,tangent.y,tangent.z,
                 //bitangent.x,bitangent.y,bitangent.z
             };
             //vertex.pos = glm::vec3(pos.x, pos.y, pos.z);
@@ -214,6 +220,7 @@ void Model::LoadModelFromPAK(const std::string& path, ID3D11Device* m_device, ID
                 std::cout << "Mesh does not have tangents or bitangents!" << std::endl;
             }
             aiVector3D tangent = mesh->mTangents[j];
+            aiVector3D bitangent = mesh->mBitangents[j];
             // we assume a convention for sampler names in the shaders. Each diffuse texture should be named
             // as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER. 
             // Same applies to other texture as the following list summarizes:
@@ -226,7 +233,8 @@ void Model::LoadModelFromPAK(const std::string& path, ID3D11Device* m_device, ID
                 pos.x, pos.y, pos.z,
                 normal.x, normal.y, normal.z,
                 uv.x, uv.y,
-                //tangent.x,tangent.y,tangent.z
+                tangent.x,tangent.y,tangent.z,
+                //bitangent.x,bitangent.y,bitangent.z
             };
             //vertex.pos = glm::vec3(pos.x, pos.y, pos.z);
             //vertex.normals = glm::vec3(normal.x, normal.y, normal.z);

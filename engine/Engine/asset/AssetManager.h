@@ -19,12 +19,12 @@ public:
 		int size;
 	};
 
-	Asset AURORAENGINE_API LoadAsset(const char* name);
+	AssetPacker::LoadedFile AURORAENGINE_API LoadAsset(const char* name);
 private:
 	std::thread loadThread;
 	std::thread assetThread;
-	std::vector<Asset> loadedAssets;
-	Asset LoadAssetFromPak(const char* name);
+	std::vector<AssetPacker::LoadedFile> loadedAssets;
+	AssetPacker::LoadedFile LoadAssetFromPak(const char* name);
 	std::vector<AssetPackage> paks;
 };
 

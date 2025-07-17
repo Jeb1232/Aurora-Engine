@@ -16,8 +16,8 @@ public:
 	~Rigidbody();
 	//cPhysicsSystem *physicsSystem  = nullptr;
 	//JPH::BodyCreationSettings settings
-	JPH::RVec3 position;
-	JPH::Quat rotation;
+	JPH::Vec3 position;
+	JPH::Vec3 rotation;
 	JPH::Vec3 lVelocity;
 	JPH::Vec3 aVelocity;
 

@@ -7,7 +7,25 @@
   </ProjectOutputs>
   <ContentFiles>
     <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\bDSample.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\BloomPS.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\BloomVS.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\Blur.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\GlassPS.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\GlassVS.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\OccPS.cso</FullPath>
     </ContentFile>
     <ContentFile>
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\pixelShader.cso</FullPath>
@@ -22,6 +40,9 @@
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\PPvertexShader.cso</FullPath>
     </ContentFile>
     <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\ShadowPixelShader.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\ShadowVertexShader.cso</FullPath>
     </ContentFile>
     <ContentFile>
@@ -29,6 +50,12 @@
     </ContentFile>
     <ContentFile>
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\skyboxVertexShader.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\skySpherePS.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\skySphereVS.cso</FullPath>
     </ContentFile>
     <ContentFile>
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\TerrainPS.cso</FullPath>
@@ -49,7 +76,13 @@
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\tessellationVertexShader.cso</FullPath>
     </ContentFile>
     <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\ThresholdPS.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
       <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\vertexShader.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Owner\source\repos\Aurora Engine\x64\Release\data\shaders\WaterVS.cso</FullPath>
     </ContentFile>
   </ContentFiles>
   <SatelliteDlls />

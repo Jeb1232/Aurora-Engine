@@ -49,6 +49,8 @@ public:
 		float x, y, z;
 		float nx, ny, nz;
 		float u, v;
+		float tx, ty, tz;
+		//float btx, bty, btz;
 	};
 
 	__declspec(align(16))
@@ -79,7 +81,7 @@ public:
 	//std::vector<ID3D11ShaderResourceView*> textures;
 	std::vector<Material> materials;
 	//std::vector<ID3D11ShaderResourceView*> texturesSpec;
-
+	std::string texPath;
 	void AURORAENGINE_API setModel(Model Imodel);
 	void AURORAENGINE_API setASource(AudioSource aSource);
 	void AURORAENGINE_API setLSource(Light lSource);

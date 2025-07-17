@@ -126,6 +126,17 @@ public:
 		float x, y, z;
 		float nx, ny, nz;
 		float u, v;
+		float tx, ty, tz;
+		//float btx, bty, btz;
+	};
+
+	struct VertexNT {
+		//glm::vec3 pos;
+		//glm::vec3 normals;
+		//glm::vec2 uvs;
+		float x, y, z;
+		float nx, ny, nz;
+		float u, v;
 		//float tx, ty, tz;
 		//float btx, bty, btz;
 	};

@@ -1,12 +1,16 @@
+#include"PPIncludes.hlsli"
+
 struct Input {
     float4 position : SV_POSITION;
     float2 uv: UV;
 };
 
-float density = 0.2f;
-float near_plane = 0.01f;
-float far_plane = 10000.0f;
+float density = 0.01f;
+const float near_plane = 0.01f;
+const float far_plane = 10000.0f;
 Texture2D renderView : register(t15);
+Texture2D occView : register(t7);
+Texture2D bloomRenderView : register(t12);
 Texture2D depthTexture : register(t14);
 SamplerState rSampler : register(s14);
 Texture2D shadowMap : register(t8);
@@ -19,8 +23,14 @@ cbuffer PostProcessCBuffer {
     matrix projectionMatrix;
     float3 lightPos;
     float3 camPos;
+    //float3 padding;
     float padding;
     float padding2;
+};
+
+cbuffer PostProcessCBuffer2 {
+    matrix mViewMatrix;
+    matrix mProjectionMatrix;
 };
 
 static const float3x3 ACESInputMat =
@@ -49,26 +59,39 @@ float LinearizeDepth(float depth)
     return 1.0f / depth1;
 }
 
+float LinearizeDepth2(float depth)
+{
+    return near_plane * far_plane / (far_plane + depth * (near_plane - far_plane));
+}
+
+
 float cOffset = 0.006f;
 float offsetX = 1.0f / 1280.0f * 0.5f;
 float offsetY = 1.0f / 720.0f * 0.5f;
 float4 main(Input input) : SV_TARGET
 {
-    float3 col = renderView.Sample(rSampler, input.uv) * 1.0f;
     float depth = depthTexture.Sample(rSampler, input.uv).r;
+    
+
+    float2 newUV = input.uv;
+    
+
+    float3 col = renderView.Sample(rSampler, input.uv) * 1.0f;
+    float3 bloomCol = bloomRenderView.Sample(rSampler, input.uv) * 1.0f;
     float Ldepth = LinearizeDepth(depth);
 
     float3 shadowmap = shadowMap.Sample(shadowSampler, input.uv);
 
     float2 texCoord = input.uv;
 
+    float rWidth = 0.0f;
+    float rHeight = 0.0f;
+    renderView.GetDimensions(rWidth, rHeight);
+
     float zOverW = depthTexture.Sample(rSampler, texCoord).r; // H is the viewport position at this pixel in the range -1 to 1.
 
-    float4 H = float4(texCoord.x * 2 - 1, (1 - texCoord.y) * 2 - 1, zOverW, 1); // Transform by the view-projection inverse.
-    matrix invViewProj = viewMatrix * projectionMatrix;
-    float4 D = mul(invViewProj, H); // Divide by w to get the world position.
-    //D = mul(projectionMatrix, D);
-    float4 worldPos = D / D.w;
+    float4 H = float4(texCoord.x, texCoord.y, zOverW, 1.0f); // Transform by the view-projection inverse.
+    float4 worldPos = DepthToWorldPos(zOverW, texCoord, viewMatrix, projectionMatrix);
 
     float4 currentPos = H; // Use the world position, and transform by the previous view-
     // projection matrix.
@@ -76,13 +99,16 @@ float4 main(Input input) : SV_TARGET
     float4 previousPos = mul(prevViewMatrix, worldPos); // Convert to nonhomogeneous points
     previousPos = mul(prevProjectionMatrix, previousPos);
     // [-1,1] by dividing by w. 
-    // previousPos /= previousPos.w; // Use this
+    previousPos /= previousPos.w; // Use this
     // frame's position and last frame's to
     // compute the pixel
     // velocity.
-    float2 velocity = (currentPos - previousPos) / 2.0f;
+    //col = previousPos;
 
-    int numSamples = 4;
+    float2 velocity = (currentPos - previousPos) / 60.0f;
+    //col = float3(velocity, zOverW);
+
+    int numSamples = 16;
 
     //float2 texCoord2 = input.uv;
     float4 color = renderView.Sample(rSampler, texCoord);
@@ -96,109 +122,84 @@ float4 main(Input input) : SV_TARGET
     } // Average all of the samples to get the final blur color.
     float4 finalColor = color / numSamples;
 
+    col = finalColor;
+
+    
+
     float distanceFromCenter = saturate(length(input.uv - 0.5f));
     float2 direction = input.uv - 0.5f;
     float caIntensity = 0.002f;
 
-    float2 redUV = input.uv + (direction * 0.001f);
-    float2 greenUV = input.uv + (direction * -0.002f);
-    float2 blueUV = input.uv + (direction * -0.003f);
+    float2 redUV = input.uv + (direction * 0.004f);
+    float2 greenUV = input.uv + (direction * 0.005f);
+    float2 blueUV = input.uv + (direction * 0.006f);
+
+    //col.r = renderView.Sample(rSampler, redUV).r;
+    //col.g = renderView.Sample(rSampler, greenUV).g;
+    //col.b = renderView.Sample(rSampler, blueUV).b;
 
 
-
-    float pixelSize = 1.0 / 640.0f;
-    float pixelSize2 = 1.0 / 360.0f;
-
-    float kernel2 = 5.0;
-    float weight = 1.0;
-
-    float Pi = 6.28318530718; // Pi*2
-
-    // GAUSSIAN BLUR SETTINGS {{{
-    float Directions = 16.0; // BLUR DIRECTIONS (Default 16.0 - More is better but slower)
-    float Quality = 3.0; // BLUR QUALITY (Default 4.0 - More is better but slower)
-    float Size = 8.0; // BLUR SIZE (Radius)
-    // GAUSSIAN BLUR SETTINGS }}}
-
-    float2 Radius = Size / float2(1280, 720);
-
-    // Pixel colour
-    float4 Color = renderView.Sample(rSampler, input.uv);
-
-    // Blur calculations
-    for (float d = 0.0; d < Pi; d += Pi / Directions)
-    {
-        for (float i = 1.0 / Quality; i <= 1.0; i += 1.0 / Quality)
-        {
-            Color += renderView.Sample(rSampler, input.uv + float2(cos(d), sin(d)) * Radius * i);
-        }
-    }
-
-
-    // Output to screen
-    Color /= Quality * Directions - 15.0;
-    
-
-    float3 bloomColor = Color;
-    float threshold = 0.5f;
-    if (bloomColor.r < threshold) {
-       //bloomColor.r = 0.0f;
-       //bloomColor.g = 0.0f;
-       //bloomColor.b = 0.0f;
-    }
-    if (bloomColor.g < threshold) {
-        //bloomColor.r = 0.0f;
-        //bloomColor.g = 0.0f;
-        //bloomColor.b = 0.0f;
-    }
-    if (bloomColor.b < threshold) {
-        //bloomColor.r = 0.0f;
-        //bloomColor.g = 0.0f;
-        //bloomColor.b = 0.0f;
-    }
-    //bloomColor = mul(ACESInputMat, bloomColor);
-    //bloomColor = RRTAndODTFit(bloomColor);
-    //mul(ACESOutputMat, bloomColor)
-    //return float4(glowColor.rgb, 1.0f);
-    //return float4(mul(ACESOutputMat, bloomColor), 1.0f);
-    //col += bloomColor;
-
-    int numRaySamples = 64;
+    int numRaySamples = 128;
     float Decay = 1.0f;
-    float Weight = 0.1f;
+    float Weight = 0.0025f;
     float Density = 1.0f;
     float4 lightWorldPos = float4(lightPos, 1.0f);
-    float4 ScreenLightPos = float4(0.0f, 0.0f, 0.0f, 1.0f);
-    ScreenLightPos = mul(viewMatrix, ScreenLightPos);
+    //float4 ScreenLightPos = lightWorldPos;
+    matrix MVP = mViewMatrix * mProjectionMatrix;
+    float4 ScreenLightPos = worldPosToScreenPos(lightPos, mViewMatrix, mProjectionMatrix);
+    //ScreenLightPos.x = MVP._m00 * lightWorldPos.x + MVP._m01 * lightWorldPos.y + MVP._m02 * lightWorldPos.z + MVP._m03;
+    //ScreenLightPos.y = MVP._m10 * lightWorldPos.x + MVP._m11 * lightWorldPos.y + MVP._m12 * lightWorldPos.z + MVP._m13;
+    //ScreenLightPos.z = MVP._m20 * lightWorldPos.x + MVP._m21 * lightWorldPos.y + MVP._m22 * lightWorldPos.z + MVP._m23;
+    //ScreenLightPos.w = MVP._m30 * lightWorldPos.x + MVP._m31 * lightWorldPos.y + MVP._m32 * lightWorldPos.z + MVP._m33;
+
+    //ScreenLightPos.w = 1.0f / ScreenLightPos.w;
+    //ScreenLightPos.x *= ScreenLightPos.w;
+    //ScreenLightPos.y *= ScreenLightPos.w;
+    //ScreenLightPos.z *= ScreenLightPos.w;
+
     //float4 ScreenLightPos = float4(0.5f, 0.7f, 1.0f, 1.0f);
     //float3 ScreenLightPos = float3(0.5f, 0.5f, 0.96f);
-    ScreenLightPos = mul(projectionMatrix, ScreenLightPos);
-    //ScreenLightPos /= ScreenLightPos.w;
-    ScreenLightPos = float4(ScreenLightPos.x + 1.0f, ScreenLightPos.y + 1.0f, ScreenLightPos.z + 1.0f, ScreenLightPos.w) / 2.0f;
-    float2 texCoord1 = input.uv;
-    float2 deltaTexCoord = (texCoord1 - ScreenLightPos.xy) * (ScreenLightPos.z < 0 ? -1 : 1);
-    // Divide by number of samples and scale by control factor.
-    deltaTexCoord *= 1.0f / numRaySamples * Density;
-    // Store initial sample.
-    float3 godrayColor = renderView.Sample(rSampler, texCoord1);
-    // Set up illumination decay factor.
-    float illuminationDecay = 1.0f;
-    // Evaluate summation from Equation 3 NUM_SAMPLES iterations.
-    for (int i = 0; i < (ScreenLightPos.z < 0 ? 0 : numRaySamples * ScreenLightPos.z); i++)
-    {
-        // Step sample location along ray.
-        texCoord1 -= deltaTexCoord;
-        // Retrieve sample at new location.
-        float3 sample1 = renderView.Sample(rSampler, texCoord1);
-        // Apply sample attenuation scale/decay factors.
-        sample1 *= illuminationDecay * Weight;
-        // Accumulate combined color.
-        godrayColor += sample1;
-        // Update exponential decay factor.
-        illuminationDecay *= Decay;
-    }
 
-    //col += godrayColor;
+    bool godrays = false;
+    if (ScreenLightPos.w > 0 && godrays) {
+
+        //ScreenLightPos = float4(float3(float2(ScreenLightPos.x + 1.0f, ScreenLightPos.y + 1.0f) * 0.5f, ScreenLightPos.z), ScreenLightPos.w);
+        //ScreenLightPos.x = (ScreenLightPos.x * 0.5f + 0.5f) / 1280;
+        //ScreenLightPos.y = (ScreenLightPos.y * 0.5f + 0.5f) / 720;
+        //ScreenLightPos.z = (ScreenLightPos.z * 0.5f + 0.5f); // Assuming depth range [0, 1]
+        float2 texCoord1 = input.uv;
+        // * (ScreenLightPos.z < 0 ? -1 : 1)
+        float2 deltaTexCoord = (texCoord1 - ScreenLightPos.xy) * (ScreenLightPos.z < 0 ? -1 : 1);
+        // Divide by number of samples and scale by control factor.
+        deltaTexCoord *= 1.0f / numRaySamples * Density;
+        // Store initial sample.
+        float3 godrayColor = occView.Sample(rSampler, texCoord1);
+        // Set up illumination decay factor.
+        float illuminationDecay = 1.0f;
+        // Evaluate summation from Equation 3 NUM_SAMPLES iterations.
+        //(ScreenLightPos.z < 0 ? 0 : numRaySamples * ScreenLightPos.z)
+        for (int i = 0; i < numRaySamples * ScreenLightPos.z; i++)
+        {
+            // Step sample location along ray.
+            texCoord1 -= deltaTexCoord;
+            // Retrieve sample at new location.
+            float3 sample1 = occView.Sample(rSampler, texCoord1);
+            // Apply sample attenuation scale/decay factors.
+            sample1 *= illuminationDecay * Weight;
+            // Accumulate combined color.
+
+            godrayColor += sample1;
+
+            // Update exponential decay factor.
+            illuminationDecay *= Decay;
+            
+        }
+        godrayColor / numRaySamples;
+
+        col += godrayColor;
+    }
+    
+    //col += bloomCol;
 
     col = mul(ACESInputMat, col);
    
@@ -207,12 +208,17 @@ float4 main(Input input) : SV_TARGET
     float3 Cout = mul(ACESOutputMat, col);
     
     float depthValue = LinearizeDepth(depthTexture.Sample(rSampler, input.uv).r) * far_plane;
+    float depthValue2 = LinearizeDepth2(depthTexture.Sample(rSampler, input.uv).r) * far_plane;
+    float fogFactor2 = saturate((3.0f - depthTexture.Sample(rSampler, input.uv).r) / (3.0f - 0.0f));
     float fogFactor = (density / sqrt(log(2))) * max(0.0f, depthValue);
     fogFactor = exp2(-fogFactor * fogFactor);
+
+    //float depthTex = LinearizeDepth2(depthTexture.Sample(rSampler, input.uv).r);
+
     //float fogFactor = pow(-depthValue * density, 2);
     //return float4(shadowmap, 1.0f);
-    //return float4(lerp(float3(0.5f, 0.5f, 0.5f), pow(saturate(Cout), 1.0f / 2.2f), saturate(fogFactor)), 1.0f);
-    //return float4(float3(depthValue, depthValue, depthValue), 1.0f);
+    //return float4(lerp(float3(0.5f, 0.5f, 0.5f), pow(saturate(Cout), 1.0f / 2.2f), fogFactor2), 1.0f);
+    //return float4(float3(depthTex, depthTex, depthTex), 1.0f);
     return float4(pow(saturate(Cout * 1.0f), 1.0f / 2.2f), 1.0f);
     //return worldPos;
     //return float4(velocity.x, velocity.y, 0.0f, 1.0f);

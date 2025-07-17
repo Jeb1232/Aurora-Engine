@@ -30,11 +30,12 @@ public:
 	ALfloat volume = 1.0f;
 	ALfloat pitch = 1.0f;
 	ALfloat minDistance = 1.0f;
-	ALfloat maxDistance = 10.0f;
+	ALfloat maxDistance = 1000.0f;
 	ALfloat rolloffFactor = 1.0f;
 	ALfloat position[3] = { 0.0f,0.0f,-10.0f };
 	ALfloat velocity[3] = { 0.0f,0.0f,0.0f };
 	bool looping = false;
+	bool is3D = true;
 	ALuint currentBuffer = 0;
 	std::vector<ALuint> buffers;
 private:

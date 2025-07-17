@@ -87,6 +87,9 @@
     <ClInclude Include="Engine\renderer\Cubemap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\core\Input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\renderer\Renderer.cpp">
@@ -143,6 +146,9 @@
     <ClCompile Include="Engine\renderer\Cubemap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\core\Input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Engine\renderer\shaders\vertexShader.hlsl" />
@@ -160,8 +166,20 @@
     <FxCompile Include="Engine\renderer\shaders\Blur.hlsl" />
     <FxCompile Include="Engine\renderer\shaders\TerrainVS.hlsl" />
     <FxCompile Include="Engine\renderer\shaders\TerrainPS.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\WaterVS.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\BloomVS.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\BloomPS.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\ThresholdPS.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\bDSample.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\ShadowPixelShader.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\skySphereVS.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\skySpherePS.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\OccPS.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\GlassVS.hlsl" />
+    <FxCompile Include="Engine\renderer\shaders\GlassPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\renderer\shaders\Lighting.hlsli" />
+    <None Include="Engine\renderer\shaders\PPIncludes.hlsli" />
   </ItemGroup>
 </Project>
